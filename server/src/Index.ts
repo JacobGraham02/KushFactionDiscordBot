@@ -5,7 +5,7 @@ dotenv.config();
 Imports for use with the discord.js library
  */
 import CustomDiscordClient from "./utilities/CustomDiscordClient";
-import {Collection, Events, GatewayIntentBits, MessageFlags, REST, Routes} from 'discord.js';
+import {ChannelType, Collection, Events, GatewayIntentBits, Guild, MessageFlags, REST, Routes} from 'discord.js';
 import path from "node:path";
 import * as fs from "node:fs";
 
@@ -84,7 +84,12 @@ async function registerSetupCommandsWithBot(botId: string, guildId: string) {
  * This function will take the name of that command, search for it in any cached commands it has, and attempt to call the 'execute' function that is
  * within the found command object.
  */
-discord_client_instance.on(Events.InteractionCreate, async(interaction) => {
+discord_client_instance.on(Events.InteractionCreate,
+    /**
+     * The asynchronous function that is triggered when the InteractionCreate event is emitted
+     * @param interaction the interaction object that is passed from the InteractionCreate event into this function
+     */
+    async(interaction): Promise<void> => {
        if (!interaction.isChatInputCommand()) {
               return;
        }
@@ -108,3 +113,33 @@ discord_client_instance.on(Events.InteractionCreate, async(interaction) => {
               }
        }
 });
+
+discord_client_instance.on(Events.GuildCreate,
+    /**
+     * The asynchronous function that is triggered when the GuildCreate event is triggered
+     * @param guild
+     */
+    async (guild): Promise<void> => {
+
+
+});
+
+async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
+    try {
+        const category_creation_response = await guild.channels.create({
+            name: `APA Season 10 bot`,
+            type: ChannelType.GuildCategory
+        });
+
+        const channel_names = [
+            "Faction goals",
+            "Resource storage",
+            "PZfans maps",
+            "Farming channel",
+            "Areas last looted",
+            "Feedback"
+        ];
+    } catch (error) {
+
+    }
+}
