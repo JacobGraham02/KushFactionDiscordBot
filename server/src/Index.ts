@@ -2,18 +2,36 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 /*
-Imports for use with the discord.js library
+Developer-defined imports
  */
-import CustomDiscordClient from "./utilities/CustomDiscordClient";
-import {ChannelType, Collection, Events, GatewayIntentBits, Guild, MessageFlags, REST, Routes} from 'discord.js';
+import DatabaseConnectionManager from "./database/mongodb/DatabaseConnectionManager";
+
+/*
+Native imports from Node.js
+ */
 import path from "node:path";
 import * as fs from "node:fs";
 
 /*
+Imports for use with the discord.js library
+ */
+import CustomDiscordClient from "./utilities/CustomDiscordClient";
+import {ChannelType, Collection, Events, GatewayIntentBits, Guild, MessageFlags, REST, Routes} from 'discord.js';
+
+/*
 Variable values defined in the .env file
  */
-const discord_bot_token: string | undefined = process.env.discord_bot_token;
-const discord_guild_id: string | undefined = process.env.discord_bot_guild_id;
+const discord_application_id: string | undefined = process.env.BOT_APPLICATION_ID;
+const discord_client_id: string | undefined = process.env.BOT_CLIENT_ID;
+const discord_client_secret: string | undefined = process.env.BOT_CLIENT_SECRET;
+
+const kush_faction_server_id: string | undefined = process.env.KUSH_FACTION_ID;
+
+const database_username: string | undefined = process.env.USERNAME;
+const database_password: string | undefined = process.env.PASSWORD;
+const database_connection_string: string | undefined = process.env.MONGODB_CONNECTION_STRING;
+const database_name: string | undefined = process.env.DATABASE_NAME;
+const database_collection_name: string | undefined = process.env.DATABASE_COLLECTION_NAME;
 
 /**
  * Declaration of custom discord client. You must explicitly define what the bot intends to do in the Discord server, so it has necessary permissions
