@@ -5,7 +5,7 @@ dotenv.config();
 Imports for use with the discord.js library
  */
 import CustomDiscordClient from "./utilities/CustomDiscordClient";
-import {Collection, GatewayIntentBits, REST, Routes} from 'discord.js';
+import {Collection, Events, GatewayIntentBits, MessageFlags, REST, Routes} from 'discord.js';
 import path from "node:path";
 import * as fs from "node:fs";
 
@@ -16,7 +16,7 @@ const discord_bot_token: string | undefined = process.env.discord_bot_token;
 const discord_guild_id: string | undefined = process.env.discord_bot_guild_id;
 
 /**
- * Declaration of custom discord client
+ * Declaration of custom discord client. You must explicitly define what the bot intends to do in the Discord server, so it has necessary permissions
  */
 const discord_client_instance: CustomDiscordClient = new CustomDiscordClient({
        intents: [
@@ -29,14 +29,13 @@ const discord_client_instance: CustomDiscordClient = new CustomDiscordClient({
 });
 
 /*
-Declaration of application variables
+Declaration of application variables. Because the Discord bot is never supposed to go offline, these variables are going to be cached and stored in a
+JSON file for later retrieval if necessary
  */
 const commands: any[] = [];
 
 /**
  * This function must be asynchronous because it reads files from a specified directory, which takes an unknown amount of time
- * @param botId the string that represents the id of the bot as it exists on Discord
- * @param guildId the string that represents the id of the guild (server) as it exists on Discord
  */
 async function loadSetupCommandsIntoCollection() {
        const commands_folder_path: string = path.join(__dirname, "../dist/commands");
@@ -59,6 +58,12 @@ async function loadSetupCommandsIntoCollection() {
        }
 }
 
+/**
+ * This function must be asynchronous because it registers commands with a Discord bot, which takes an unknown amount of time.
+ * It uses the Discord API to register these commands.
+ * @param botId the id of the bot as it exists on Discord
+ * @param guildId the id of the server as it exists on Discord
+ */
 async function registerSetupCommandsWithBot(botId: string, guildId: string) {
        if (botId && guildId) {
               const rest = new REST({}).setToken(botId);
@@ -73,3 +78,33 @@ async function registerSetupCommandsWithBot(botId: string, guildId: string) {
                   })
        }
 }
+
+/**
+ * The event InteractionCreate is emitted by the Discord bot whenever an interaction is done against it (a user attempts to use a bot command).
+ * This function will take the name of that command, search for it in any cached commands it has, and attempt to call the 'execute' function that is
+ * within the found command object.
+ */
+discord_client_instance.on(Events.InteractionCreate, async(interaction) => {
+       if (!interaction.isChatInputCommand()) {
+              return;
+       }
+
+       const user_command = discord_client_instance.discord_commands.get(
+           interaction.commandName
+       );
+
+       if (!user_command) {
+              interaction.reply({content: `The command you have used does not exist. Please try again or use another command`, flags: MessageFlags.Ephemeral});
+              return;
+       }
+
+       try {
+              user_command.execute(interaction);
+       } catch (error) {
+              if (interaction.replied || interaction.deferred) {
+                     await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+              } else {
+                     await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+              }
+       }
+});
