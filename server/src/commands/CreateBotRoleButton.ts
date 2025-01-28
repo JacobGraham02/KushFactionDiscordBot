@@ -12,8 +12,12 @@ export default function() {
             ),
         authorization_role_name: [""],
 
+        /**
+         * Replies to the user interaction /create-bot-role-button by sending a button that will grant administrative permissions to the bot
+         * @param interaction
+         */
         async execute(interaction: any): Promise<void> {
-            let channel_to_add_button = interaction.options.channel_name;
+            let channel_to_add_button: number = interaction.options.channel_name;
 
             if (!channel_to_add_button) {
                 channel_to_add_button = interaction.channel;

@@ -1,25 +1,74 @@
-import {SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, AnyComponentBuilder} from "discord.js";
+import {
+    SlashCommandBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ActionRowBuilder,
+    AnyComponentBuilder,
+    StringSelectMenuBuilder,
+    StringSelectMenuOptionBuilder,
+} from "discord.js";
+import * as fs from "node:fs";
 
-export default function() {
+export default function(): void {
     const create_bot_role_button_object: Object = {
         data: new SlashCommandBuilder()
-            .setName(`create-bot-role-button`)
-            .setDescription(`Adds 1 button which grants administrative permissions to the bot`)
-            .addChannelOption(option =>
-                option.setName(`add_bot_admin_button`)
-                    .setDescription(`(Optional) Add administrative button?`)
-                    .setRequired(false)
-            ),
+            .setName('PZfans')
+            .setDescription(`Get a list of all PZfans map links for APA`)
+        ,
         authorization_role_name: [""],
 
+        /**
+         * Replies to the user interaction /PZfans by sending a dropdown list of PZ fans map links
+         * @param interaction how the user interacted with the bot through Discord
+         */
         async execute(interaction: any): Promise<void> {
-            let channel_to_add_button = interaction.options.channel_name;
+            try {
+                const json_file_path: string = `./data/PzfansMaps.json`;
+                const actionRow: ActionRowBuilder<AnyComponentBuilder> = await createPzfansDropdownMenu(json_file_path);
 
-            if (!channel_to_add_button) {
-                channel_to_add_button = interaction.channel;
+                await interaction.reply({
+                    content: `Please select a map:`,
+                    components: [actionRow],
+                    ephemeral: true,
+                })
+            } catch (error) {
+                await interaction.reply({
+                    content: `There was an error when attempting to load the map selector menu: ${error}`,
+                    ephemeral: true,
+                })
             }
-
-
         }
+    }
+}
+
+/**
+ * Constructs a dropdown menu that is then used to show the user a list of available Zomboid maps that they can access on the
+ * Project Zomboid Fans website
+ * @param json_file_path file path to the map data json file
+ */
+async function createPzfansDropdownMenu(json_file_path: string): Promise<ActionRowBuilder<AnyComponentBuilder>> {
+    try {
+        const json_data: string = fs.readFileSync(`${json_file_path}`, "utf-8");
+        const option_menu_data: IPzFansMapItem[] = JSON.parse(json_data);
+
+        const menu_options: StringSelectMenuOptionBuilder[] = option_menu_data.map(map_item => {
+            return new StringSelectMenuOptionBuilder()
+                .setLabel(map_item.label)
+                .setDescription(map_item.description)
+                .setValue(map_item.url);
+        });
+
+        const select_pzfans_map = new StringSelectMenuBuilder()
+            .setCustomId("PZfans_map_selector_menu")
+            .setPlaceholder("Select a map")
+            .addOptions(
+                menu_options
+            )
+
+        const actionRow: ActionRowBuilder<AnyComponentBuilder> = new ActionRowBuilder().addComponents(select_pzfans_map);
+
+        return actionRow;
+    } catch (error) {
+        throw error;
     }
 }
