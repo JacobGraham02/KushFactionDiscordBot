@@ -5,7 +5,8 @@ dotenv.config();
 Developer-defined imports
  */
 import DatabaseConnectionManager from "./database/mongodb/DatabaseConnectionManager";
-import ButtonHandlers from "./commands/button_handlers/ButtonHandlers";
+import ButtonHandler from "./event_handlers/button_handler/ButtonHandler";
+import FormHandler from "./event_handlers/form_handler/FormHandler";
 
 /*
 Native imports from Node.js
@@ -111,14 +112,26 @@ discord_client_instance.on(Events.InteractionCreate,
     async(interaction): Promise<void> => {
         if (interaction.isButton()) {
             try {
-                const button_handler = new ButtonHandlers(interaction);
-                await button_handler.handleButtonClick();
+                const button_handler = new ButtonHandler(interaction);
+                await button_handler.handle();
             } catch (error) {
                 if (!interaction.replied) {
                     await interaction.reply({
                         content: `There was an error when attempting to process your button click. Please try again or inform the bot administrator: ${error}`,
                         flags: MessageFlags.Ephemeral
                     });
+                }
+            }
+        } else if (interaction.isModalSubmit()) {
+            try {
+                const form_handler = new FormHandler(interaction);
+                await form_handler.handle();
+            } catch (error) {
+                if (!interaction.replied) {
+                    await interaction.reply({
+                        content: `There was an error when attempting to process your form submission. Please try again or inform the bot administrator: ${error}`,
+                        flags: MessageFlags.Ephemeral
+                    })
                 }
             }
         }

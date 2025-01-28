@@ -1,14 +1,21 @@
 import {ButtonInteraction, MessageFlags} from "discord.js";
+import InteractionHandler from "../InteractionHandler";
 
-export default class ButtonHandlers {
+/**
+ * Uses abstract class InteractionHandler to provide implementation specifically for
+ * ModalSubmitInteraction interaction types
+ * @param button_interaction ButtonInteraction
+ */
+export default class ButtonHandler extends InteractionHandler {
 
-    constructor(private button_interaction: ButtonInteraction) {}
+    constructor(private button_interaction: ButtonInteraction) {
+        super(button_interaction);
+    }
 
     /**
-     * When a button click interaction occurs in Discord, there is a custom id associated with that interaction which
-     * we use in a switch/case statement to send the intended reply back to discord
+     * A switch/case is used here along with the unique button id to determine what action should be done
      */
-    public async handleButtonClick(): Promise<void> {
+    public async handle(): Promise<void> {
         const button_id: string = this.button_interaction.customId;
 
         switch (button_id) {
