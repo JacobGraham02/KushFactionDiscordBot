@@ -2,5 +2,8 @@
   "commands": {
     "error": "The command you have used does not exist. Please try again or use another command.",
     "executeError": "There was an error while executing this command. Please inform the bot developer: {error}"
+  },
+  "greetings": {
+    "hello": "hello"
   }
 }

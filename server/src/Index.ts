@@ -7,12 +7,18 @@ Developer-defined imports
 import DatabaseConnectionManager from "./database/mongodb/DatabaseConnectionManager";
 import ButtonHandler from "./event_handlers/button_handler/ButtonHandler";
 import FormHandler from "./event_handlers/form_handler/FormHandler";
+import I18nLocalisation from "./utilities/I18nLocalisation";
 
 /*
 Native imports from Node.js
  */
 import path from "node:path";
 import * as fs from "node:fs";
+
+/*
+Imports from external libraries
+ */
+import i18n from "i18next";
 
 /*
 Imports for use with the discord.js library
