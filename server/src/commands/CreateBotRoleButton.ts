@@ -5,11 +5,7 @@ export default function() {
         data: new SlashCommandBuilder()
             .setName(`create-bot-role-button`)
             .setDescription(`Adds 1 button which grants administrative permissions to the bot`)
-            .addChannelOption(option =>
-                option.setName(`add_bot_admin_button`)
-                    .setDescription(`(Optional) Add administrative button?`)
-                    .setRequired(false)
-            ),
+            ,
         authorization_role_name: [""],
 
         /**

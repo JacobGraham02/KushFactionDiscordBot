@@ -108,28 +108,32 @@ discord_client_instance.on(Events.InteractionCreate,
      * @param interaction the interaction object that is passed from the InteractionCreate event into this function
      */
     async(interaction): Promise<void> => {
-       if (!interaction.isChatInputCommand()) {
+        if (interaction.isButton()) {
+
+        }
+
+        if (!interaction.isChatInputCommand()) {
               return;
-       }
+        }
 
-       const user_command = discord_client_instance.discord_commands.get(
-           interaction.commandName
-       );
+        const user_command = discord_client_instance.discord_commands.get(
+            interaction.commandName
+        );
 
-       if (!user_command) {
+        if (!user_command) {
               interaction.reply({content: `The command you have used does not exist. Please try again or use another command`, flags: MessageFlags.Ephemeral});
               return;
-       }
+        }
 
-       try {
+        try {
               user_command.execute(interaction);
-       } catch (error) {
-              if (interaction.replied || interaction.deferred) {
+        } catch (error) {
+                if (interaction.replied || interaction.deferred) {
                      await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
-              } else {
+                } else {
                      await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
-              }
-       }
+                }
+        }
 });
 
 discord_client_instance.on(Events.GuildCreate,
