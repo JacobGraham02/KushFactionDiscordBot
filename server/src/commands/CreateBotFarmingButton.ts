@@ -11,11 +11,7 @@ export default function() {
         data: new SlashCommandBuilder()
             .setName(`create-bot-farming-button`)
             .setDescription(`Adds 1 button for informing when the farm has been watered last`)
-            .addChannelOption(option =>
-                option.setName(`add_extra_info`)
-                    .setDescription(`(Optional) Add additional farming info?`)
-                    .setRequired(false)
-            ),
+            ,
         authorization_role_name: [""],
 
         /**
@@ -26,7 +22,7 @@ export default function() {
             const watered_crops_button: ButtonBuilder = new ButtonBuilder()
                 .setCustomId('farming_button')
                 .setLabel('Watered crops')
-                .setStyle(ButtonStyle.Success);
+                .setStyle(ButtonStyle.Primary);
 
             const farming_button_row: ActionRowBuilder<AnyComponentBuilder> = new ActionRowBuilder()
                 .addComponents(
@@ -38,5 +34,5 @@ export default function() {
                 components: [farming_button_row]
             });
         }
-    }
+    };
 }
