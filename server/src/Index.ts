@@ -24,7 +24,17 @@ import i18n from "i18next";
 Imports for use with the discord.js library
  */
 import CustomDiscordClient from "./utilities/CustomDiscordClient";
-import {ChannelType, Collection, Events, GatewayIntentBits, Guild, MessageFlags, REST, Routes} from 'discord.js';
+import {
+    ChannelType,
+    Collection,
+    Events,
+    GatewayIntentBits,
+    Guild,
+    MessageFlags,
+    REST,
+    Routes
+} from 'discord.js';
+import {ICommand} from "./interfaces/ICommand";
 
 /*
 Variable values defined in the .env file
@@ -33,13 +43,18 @@ const discord_application_id: string | undefined = process.env.BOT_APPLICATION_I
 const discord_client_id: string | undefined = process.env.BOT_CLIENT_ID;
 const discord_client_secret: string | undefined = process.env.BOT_CLIENT_SECRET;
 
-const kush_faction_server_id: string | undefined = process.env.KUSH_FACTION_ID;
-
 const database_username: string | undefined = process.env.USERNAME;
 const database_password: string | undefined = process.env.PASSWORD;
 const database_connection_string: string | undefined = process.env.MONGODB_CONNECTION_STRING;
 const database_name: string | undefined = process.env.DATABASE_NAME;
 const database_collection_name: string | undefined = process.env.DATABASE_COLLECTION_NAME;
+
+const kush_faction_server_id: string | undefined = process.env.KUSH_FACTION_ID;
+const kush_faction_the_ogs_role_id: string | undefined = process.env.KUSH_THE_OGS_ROLE_ID;
+const kush_faction_kush_boys_role_id: string | undefined = process.env.KUSH_KUSH_BOYS_ROLE_ID;
+const kush_faction_treasure_toker_role_id: string | undefined = process.env.KUSH_TREASURE_TOKER_ROLE_ID;
+const kush_faction_buy_click_on_blu_ray_dvd_role_id: string | undefined = process.env.KUSH_BUY_CLICK_ON_BLU_RAY_DVD_ROLE_ID;
+const kush_faction_big_pimpin_role_id: string | undefined = process.env.KUSH_BIG_PIMPIN_ROLE_ID;
 
 /**
  * Declaration of custom discord client. You must explicitly define what the bot intends to do in the Discord server, so it has necessary permissions
@@ -73,14 +88,16 @@ async function loadSetupCommandsIntoCollection() {
        for (const command_file of filtered_command_files) {
               const command_file_path: any = path.join(commands_folder_path, command_file);
               const command: any = await import(command_file_path);
-              const command_object = command.default();
+              const command_class: any = command.default;
 
-              discord_client_instance.discord_commands.set(
-                  command_object.data.name,
-                  command_object
-              );
-
-              commands.push(command_object.data);
+              if (typeof command_class === "function") {
+                  const command_instance: ICommand = new command_class();
+                  discord_client_instance.discord_commands.set(
+                      command_instance.data.name,
+                      command_instance
+                  );
+                  commands.push(command_instance.data);
+              }
        }
 }
 
@@ -92,16 +109,15 @@ async function loadSetupCommandsIntoCollection() {
  */
 async function registerSetupCommandsWithBot(botId: string, guildId: string) {
        if (botId && guildId) {
-              const rest = new REST({}).setToken(botId);
-              rest.put(Routes.applicationGuildCommands(botId, guildId), {
-                     body: commands,
-              })
-                  .then(() => {
-                        console.log("The application commands were successfully deployed to the Discord bot");
-                  })
-                  .catch((error) => {
-                         console.log(`There was an error when attempting to deploy the application comamnds to the Discord bot: ${error}`);
-                  })
+              const rest = new REST({version:"10"}).setToken(botId);
+
+              try {
+                  await rest.put(Routes.applicationGuildCommands(botId, guildId), {
+                      body: commands,
+                  });
+              } catch (error) {
+                  throw error;
+              }
        }
 }
 
@@ -140,30 +156,39 @@ discord_client_instance.on(Events.InteractionCreate,
                     })
                 }
             }
-        }
+        } else if (interaction.isChatInputCommand()) {
+            const user_command: ICommand | undefined = discord_client_instance.discord_commands.get(
+                interaction.commandName
+            );
 
-        if (!interaction.isChatInputCommand()) {
-              return;
-        }
+            if (!user_command) {
+                interaction.reply({
+                    content: `The command you have used does not exist. Please try again or use another command`,
+                    flags: MessageFlags.Ephemeral
+                });
+                return;
+            }
 
-        const user_command = discord_client_instance.discord_commands.get(
-            interaction.commandName
-        );
+            const command_role_authorizations: string[] = user_command.authorization_role_name;
 
-        if (!user_command) {
-              interaction.reply({content: `The command you have used does not exist. Please try again or use another command`, flags: MessageFlags.Ephemeral});
-              return;
-        }
+            if (!determineIfUserCanUseCommand(interaction.member, command_role_authorizations)) {
 
-        try {
-              user_command.execute(interaction);
-        } catch (error) {
+            }
+
+            try {
+                user_command.execute(interaction);
+            } catch (error) {
                 if (interaction.replied || interaction.deferred) {
-                     await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+                    await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
                 } else {
-                     await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+                    await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
                 }
+            }
         }
+
+
+
+        // const command_execute_authorization: string[] = user_command.authorization_role_name;
 });
 
 discord_client_instance.on(Events.GuildCreate,
@@ -194,4 +219,8 @@ async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
     } catch (error) {
 
     }
+}
+
+function determineIfUserCanUseCommand(client: any, client_role: string[]): boolean {
+    return client.roles.cache.has()
 }
