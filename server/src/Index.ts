@@ -25,6 +25,7 @@ Imports for use with the discord.js library
  */
 import CustomDiscordClient from "./utilities/CustomDiscordClient";
 import {
+    CategoryChannel,
     ChannelType,
     Collection,
     Events,
@@ -32,7 +33,7 @@ import {
     Guild,
     MessageFlags,
     REST,
-    Routes
+    Routes, TextChannel
 } from 'discord.js';
 import {ICommand} from "./interfaces/ICommand";
 
@@ -142,6 +143,7 @@ discord_client_instance.on(Events.InteractionCreate,
                         content: `There was an error when attempting to process your button click. Please try again or inform the bot administrator: ${error}`,
                         flags: MessageFlags.Ephemeral
                     });
+                    return;
                 }
             }
         } else if (interaction.isModalSubmit()) {
@@ -153,7 +155,8 @@ discord_client_instance.on(Events.InteractionCreate,
                     await interaction.reply({
                         content: `There was an error when attempting to process your form submission. Please try again or inform the bot administrator: ${error}`,
                         flags: MessageFlags.Ephemeral
-                    })
+                    });
+                    return;
                 }
             }
         } else if (interaction.isChatInputCommand()) {
@@ -171,17 +174,24 @@ discord_client_instance.on(Events.InteractionCreate,
 
             const command_role_authorizations: string[] = user_command.authorization_role_name;
 
-            if (!determineIfUserCanUseCommand(interaction.member, command_role_authorizations)) {
-
-            }
-
             try {
-                user_command.execute(interaction);
+                if (determineIfUserCanUseCommand(interaction.member, command_role_authorizations)) {
+                    user_command.execute(interaction);
+                } else {
+                    const authorized_roles = createListOfRoles(command_role_authorizations)
+                    await interaction.reply({
+                        content: `You must have one of the following roles to use this command: ${authorized_roles}`,
+                        flags: MessageFlags.Ephemeral
+                    })
+                    return;
+                }
             } catch (error) {
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+                    return;
                 } else {
                     await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+                    return;
                 }
             }
         }
@@ -196,19 +206,33 @@ discord_client_instance.on(Events.GuildCreate,
      * The asynchronous function that is triggered when the GuildCreate event is triggered
      * @param guild
      */
-    async (guild): Promise<void> => {
-
-
+    async (guild: Guild): Promise<void> => {
+        try {
+            /**
+             * TODO: Insert check using database class to see if a document with the guild id already exists before attempting to create category and channels
+             */
+            await createBotCategoryAndChannels(guild);
+        } catch (error) {
+            console.error(`There was an error when attempting to create a new category and channels within Discord`);
+            return;
+        }
 });
 
+/**
+ * Creates a new category and several channels within that category for the bot to use
+ * @param guild the Guild (server) on Discord
+ */
 async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
     try {
-        const category_creation_response = await guild.channels.create({
+        const category_creation_response: CategoryChannel = await guild.channels.create({
             name: `APA Season 10 bot`,
             type: ChannelType.GuildCategory
         });
 
-        const channel_names = [
+        const discord_channel_ids: Map<string, string> = new Map<string, string>();
+        discord_channel_ids.set("guild_id", guild.id);
+
+        const channel_names: string[] = [
             "Faction goals",
             "Resource storage",
             "PZfans maps",
@@ -216,11 +240,54 @@ async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
             "Areas last looted",
             "Feedback"
         ];
-    } catch (error) {
 
+        const mongodb_field_names: string[] = [
+            "discord_faction_goals_channel_id",
+            "discord_resource_storage_channel_id",
+            "discord_pzfans_maps_channel_id",
+            "discord_farming_channel_id",
+            "discord_areas_looted_channel_id",
+            "discord_feedback_channel_id"
+        ];
+
+        for (let i: number = 0; i < channel_names.length; i++) {
+            const channel_name: string = channel_names[i];
+            if (channel_name) {
+                const created_channel: TextChannel = await guild.channels.create({
+                    name: `${channel_name}`,
+                    type: ChannelType.GuildText,
+                    parent: category_creation_response.id
+                });
+                const mongodb_channel_id_fields: string = mongodb_field_names[i];
+                discord_channel_ids.set(mongodb_channel_id_fields, created_channel.id);
+            }
+        }
+    } catch (error) {
+        throw error;
     }
 }
 
-function determineIfUserCanUseCommand(client: any, client_role: string[]): boolean {
-    return client.roles.cache.has()
+/**
+ * Returns if a user has permission to execute a command based on the values in the authorization_role_name array associated with that command
+ * @param client the guild member from Discord who interacted with the bot
+ * @param client_authorization_role_array an array of strings that shows what role a user must have to execute that command
+ * @return if the user can use that command
+ */
+function determineIfUserCanUseCommand(client: any, client_authorization_role_array: string[]): boolean {
+    return client.roles.cache.some((role: string) => client_authorization_role_array.includes(role));
+}
+
+/**
+ * Creates a list of human-readable roles who have permissions to execute a given command
+ * @param roles an array of strings that hold all roles
+ * @return string that contains what roles can execute this command
+ */
+function createListOfRoles(roles: string[]): string {
+    let roles_allowed_sentence: string = "";
+    for (let i = 0; i < roles.length - 1; i++) {
+        roles_allowed_sentence += roles[i];
+        roles_allowed_sentence += ", ";
+    }
+    roles_allowed_sentence += `or ${roles[roles.length-1]}`;
+    return roles_allowed_sentence;
 }
