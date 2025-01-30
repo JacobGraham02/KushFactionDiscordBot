@@ -230,7 +230,7 @@ async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
         });
 
         const discord_channel_ids: Map<string, string> = new Map<string, string>();
-        discord_channel_ids.set("guild_id", guild.id);
+        discord_channel_ids.set("discord_guild_id", guild.id);
 
         const channel_names: string[] = [
             "Faction goals",
