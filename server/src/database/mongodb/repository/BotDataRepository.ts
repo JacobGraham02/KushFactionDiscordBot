@@ -36,7 +36,7 @@ export class BotDataRepository extends DatabaseRepository<any> {
     }
 
     /**
-     * Creates a new bot data document or updates an existing one
+     * Creates a new bot channel id data document or updates an existing one
      * @param data The bot data to insert or update
      * @returns Promise<UpdateResult<any>> The update result object
      */

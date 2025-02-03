@@ -8,6 +8,7 @@ import DatabaseConnectionManager from "./database/mongodb/DatabaseConnectionMana
 import ButtonHandler from "./event_handlers/button_handler/ButtonHandler";
 import FormHandler from "./event_handlers/form_handler/FormHandler";
 import I18nLocalisation from "./utilities/I18nLocalisation";
+import CustomEventEmitter from "./utilities/CustomEventEmitter";
 
 /*
 Native imports from Node.js
@@ -38,6 +39,8 @@ import {
 } from 'discord.js';
 import {ICommand} from "./interfaces/ICommand";
 import {BotDataRepository} from "./database/mongodb/repository/BotDataRepository";
+import IBotDataDocument from "./models/IBotDataDocument";
+import {UpdateResult} from "mongodb";
 
 /*
 Variable values defined in the .env file
@@ -83,6 +86,7 @@ JSON file for later retrieval if necessary
 const commands: any[] = [];
 let database_repository: BotDataRepository;
 let database_connection_manager: DatabaseConnectionManager;
+let custom_event_emitter: CustomEventEmitter;
 
 /**
  * This function must be asynchronous because it reads files from a specified directory, which takes an unknown amount of time
@@ -175,9 +179,12 @@ async function closeDatabaseConnection(): Promise<void> {
 discord_client_instance.on(Events.ClientReady,
     /**
      * The asynchronous function that is triggered when the bot process is started
+     * Because CustomEventEmitter is a singleton and has a static method to retrieve the connection,
+     * we do not have to use the 'new' keyword for instantiation
      */
     async(): Promise<void> => {
         const channel: Channel | undefined = discord_client_instance.channels.cache.get(test_channel_id);
+        custom_event_emitter = CustomEventEmitter.getCustomEventEmitterInstance();
         try {
             if (!database_connection_manager && !database_repository) {
                 await createDatabaseConnection();
@@ -269,10 +276,6 @@ discord_client_instance.on(Events.InteractionCreate,
                 }
             }
         }
-
-
-
-        // const command_execute_authorization: string[] = user_command.authorization_role_name;
 });
 
 discord_client_instance.on(Events.GuildCreate,
@@ -365,3 +368,26 @@ function createListOfRoles(roles: string[]): string {
     roles_allowed_sentence += `or ${roles[roles.length-1]}`;
     return roles_allowed_sentence;
 }
+
+/*******************************************************************/
+/*  Beginning of custom event emitter functions                    */
+/*******************************************************************/
+custom_event_emitter!!.on("updateBotChannelData",
+    /**
+     * When a bot administrator attempts to update the channel data associated with the bot, this event will trigger
+     * @param channel the target Discord channel
+     * @param bot_channel_data_document the structure of the document containing the bot channel data
+     */
+    async(channel: Channel, bot_channel_data_document: IBotDataDocument): Promise<void> => {
+        try {
+            const create_bot_data_response: UpdateResult<any> = await database_repository.create(bot_channel_data_document);
+            if (channel.isSendable()) {
+                channel.send({
+                    content: `Bot has been updated with new Discord channel ids`
+                });
+            }
+        } catch (error) {
+            throw error;
+        }
+    });
+
