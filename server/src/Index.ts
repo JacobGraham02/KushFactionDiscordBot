@@ -36,6 +36,7 @@ import {
     Routes, TextChannel
 } from 'discord.js';
 import {ICommand} from "./interfaces/ICommand";
+import {BotDataRepository} from "./database/mongodb/repository/BotDataRepository";
 
 /*
 Variable values defined in the .env file
@@ -44,11 +45,13 @@ const discord_application_id: string | undefined = process.env.BOT_APPLICATION_I
 const discord_client_id: string | undefined = process.env.BOT_CLIENT_ID;
 const discord_client_secret: string | undefined = process.env.BOT_CLIENT_SECRET;
 
-const database_username: string | undefined = process.env.USERNAME;
-const database_password: string | undefined = process.env.PASSWORD;
+const database_connection_username: string | undefined = process.env.USERNAME;
+const database_connection_password: string | undefined = process.env.PASSWORD;
 const database_connection_string: string | undefined = process.env.MONGODB_CONNECTION_STRING;
 const database_name: string | undefined = process.env.DATABASE_NAME;
 const database_collection_name: string | undefined = process.env.DATABASE_COLLECTION_NAME;
+const database_connection_min_pool_size: number | undefined = process.env.DATABASE_CONNECTION_MIN_POOL_SIZE;
+const database_connection_max_pool_size: number | undefined = process.env.DATABASE_CONNECTION_MAX_POOL_SIZE;
 
 const kush_faction_server_id: string | undefined = process.env.KUSH_FACTION_ID;
 const kush_faction_the_ogs_role_id: string | undefined = process.env.KUSH_THE_OGS_ROLE_ID;
@@ -121,6 +124,50 @@ async function registerSetupCommandsWithBot(botId: string, guildId: string) {
               }
        }
 }
+
+/**
+ * Returns a created BotDataRepository class instance so that we can interact with the MongoDB database.
+ */
+async function createDatabaseConnection(): Promise<BotDataRepository> {
+    if (!database_collection_name) {
+        throw new Error(`The database collection name is undefined or is a falsy value. Please check the environment variables file`)
+    }
+
+    const database_manager = new DatabaseConnectionManager(
+        database_connection_username,
+        database_connection_password,
+        database_connection_string,
+        database_connection_min_pool_size,
+        database_connection_max_pool_size,
+        database_name,
+        null,
+        database_collection_name
+    );
+
+    await database_manager.initializeMongodbDatabaseInstance();
+
+    if (!database_manager.database_instance) {
+        throw new Error(`The database instance could not be initialized`);
+    }
+
+    const bot_data_repository: BotDataRepository = new BotDataRepository(
+        database_manager.database_instance,
+        database_collection_name
+    );
+
+    return bot_data_repository;
+}
+
+/**
+ * The event ClientReady is emitted by the Discord bot whenever the bot is activated
+ */
+discord_client_instance.on(Events.ClientReady,
+    /**
+     * The asynchronous function that is triggered when the bot process is started
+     */
+    async(): Promise<void> => {
+
+});
 
 /**
  * The event InteractionCreate is emitted by the Discord bot whenever an interaction is done against it (a user attempts to use a bot command).
