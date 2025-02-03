@@ -4,48 +4,65 @@ import {Collection, Db, MongoClient, ServerApiVersion} from "mongodb";
  * Manages the database connection pool that allows us to perform operations on a mongodb database
  */
 export default class DatabaseConnectionManager {
-    database_username: string;
-    database_password: string;
-    database_connection_string: string;
-    database_connection_maximum_pool_size: number;
-    database_connection_minimum_pool_size: number;
-    database_name: string;
-    database_collection_name: string;
-    database_instance: Db | null;
+    database_username: string | undefined;
+    database_password: string | undefined;
+    database_connection_string: string | undefined;
+    database_connection_maximum_pool_size: number | undefined;
+    database_connection_minimum_pool_size: number | undefined;
+    database_name: string | undefined;
+    database_collection_name: string | undefined;
+    database_instance: Db | null | undefined;
     mongodb_database_client: MongoClient | undefined;
 
     /**
      * Builds a mongodb object which can perform various operations on a mongodb database
-     * @param username username of a database administrator
-     * @param password password of a database administrator
-     * @param connection_string connection string to the database
-     * @param maximumPoolSize maximum pool size for database connections
-     * @param minimumPoolSize minimum pool size for database connections
+     * @param database_username username of a database administrator
+     * @param database_password password of a database administrator
+     * @param database_connection_string connection string to the database
+     * @param database_minimum_pool_size minimum pool size for database connections
+     * @param database_maximum_pool_size maximum pool size for database connections
      * @param database_name name of a database in the mongodb cluster
-     * @param database_collection_name name of a collection within the database
      * @param database_instance an instance of the database that exists in mongodb
+     * @param database_collection_name name of a collection within the database
      */
-    constructor(username: string,
-                password: string,
-                connection_string: string,
-                maximumPoolSize: number,
-                minimumPoolSize: number,
-                database_name: string,
+    constructor(database_username: string | undefined,
+                database_password: string | undefined,
+                database_connection_string: string | undefined,
+                database_minimum_pool_size: number | undefined,
+                database_maximum_pool_size: number | undefined,
+                database_name: string | undefined,
                 database_instance: Db | null,
-                database_collection_name: string) {
+                database_collection_name: string | undefined) {
 
-        this.database_username = username;
-        this.database_password = password;
-        this.database_connection_string = connection_string;
-        this.database_connection_maximum_pool_size = maximumPoolSize;
-        this.database_connection_minimum_pool_size = minimumPoolSize;
-        this.database_name = database_name;
-        this.database_collection_name = database_collection_name;
-        this.database_instance = null;
-        this.database_connection_string = this.database_connection_string
-            .replace("${USERNAME}", encodeURIComponent(this.database_username))
-            .replace("${PASSWORD}", encodeURIComponent(this.database_password));
-
+        if (database_username) {
+            this.database_username = database_username;
+        }
+        if (database_password) {
+            this.database_password = database_password;
+        }
+        if (database_connection_string) {
+            this.database_connection_string = database_connection_string;
+        }
+        if (database_minimum_pool_size) {
+            this.database_connection_minimum_pool_size = database_minimum_pool_size;
+        }
+        if (database_maximum_pool_size) {
+            this.database_connection_maximum_pool_size = database_maximum_pool_size;
+        }
+        if (database_name) {
+            this.database_name = database_name;
+        }
+        if (database_instance) {
+            this.database_instance = database_instance;
+        }
+        if (database_collection_name) {
+            this.database_collection_name = database_collection_name;
+        }
+        if (this.database_connection_string && this.database_username && this.database_password) {
+            this.database_connection_string = this.database_connection_string
+                .replace("${USERNAME}", encodeURIComponent(this.database_username))
+                .replace("${PASSWORD}", encodeURIComponent(this.database_password));
+        }
     }
 
     /**

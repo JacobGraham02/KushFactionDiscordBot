@@ -1,6 +1,8 @@
 import {DatabaseRepository} from "../../repository/DatabaseRepository";
 import {Collection, Db, DeleteResult, UpdateResult} from "mongodb";
 import IBotDataDocument from "../../../models/IBotDataDocument";
+import {IFactionGoals} from "../../../models/IFactionGoals";
+import IFactionResources from "../../../models/IFactionResources";
 
 /**
  * Created a base CRUD class that is used to interact with a specific mongodb collection
@@ -34,7 +36,7 @@ export class BotDataRepository extends DatabaseRepository<any> {
     }
 
     /**
-     * Creates a new bot data document or updates an existing one
+     * Creates a new bot channel id data document or updates an existing one
      * @param data The bot data to insert or update
      * @returns Promise<UpdateResult<any>> The update result object
      */
@@ -69,10 +71,53 @@ export class BotDataRepository extends DatabaseRepository<any> {
         }
     }
 
+    /**
+     * Deletes an existing bot data document
+     * @param id The id of the Discord bot
+     * @returns If the bot data was deleted successfully
+     */
     async delete(id: string): Promise<boolean> {
         try {
             const deletion_result: DeleteResult = await this.collection.deleteOne({ discord_guild_id: id });
             return deletion_result.deletedCount >= 1;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Creates or updates faction goals
+     * @param id The id of the faction goal Document
+     * @param data The data that conforms to IFactionGoals to be entered into the database
+     * @return The update result from the update operation
+     */
+    async createOrUpdateFactionGoals(id: string, data: IFactionGoals): Promise<UpdateResult<any>> {
+        try {
+            const create_or_update_faction_goals_result = await this.collection.updateOne(
+                {faction_goals_id: id},
+                {$set: data},
+                {upsert: true}
+            );
+            return create_or_update_faction_goals_result;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Creates or updates faction resource count
+     * @param id The id of the faction resource count Document
+     * @param data The data that conforms to IFactionResources to be entered into the database
+     * @return The update result from the update operation
+     */
+    async createOrUpdateFactionResources(id: string, data: IFactionResources): Promise<UpdateResult<any>> {
+        try {
+            const create_or_update_faction_resources_result: UpdateResult<any> = await this.collection.updateOne(
+                {faction_resources_id: id},
+                {$set: data},
+                {upsert: true}
+            );
+            return create_or_update_faction_resources_result;
         } catch (error) {
             throw error;
         }
