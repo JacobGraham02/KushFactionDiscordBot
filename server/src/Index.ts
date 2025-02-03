@@ -26,6 +26,7 @@ Imports for use with the discord.js library
 import CustomDiscordClient from "./utilities/CustomDiscordClient";
 import {
     CategoryChannel,
+    Channel,
     ChannelType,
     Collection,
     Events,
@@ -60,6 +61,8 @@ const kush_faction_treasure_toker_role_id: string | undefined = process.env.KUSH
 const kush_faction_buy_click_on_blu_ray_dvd_role_id: string | undefined = process.env.KUSH_BUY_CLICK_ON_BLU_RAY_DVD_ROLE_ID;
 const kush_faction_big_pimpin_role_id: string | undefined = process.env.KUSH_BIG_PIMPIN_ROLE_ID;
 
+const test_channel_id: string | undefined = process.env.TEST_CHANNEL_ID;
+
 /**
  * Declaration of custom discord client. You must explicitly define what the bot intends to do in the Discord server, so it has necessary permissions
  */
@@ -78,6 +81,8 @@ Declaration of application variables. Because the Discord bot is never supposed 
 JSON file for later retrieval if necessary
  */
 const commands: any[] = [];
+let database_repository: BotDataRepository;
+let database_connection_manager: DatabaseConnectionManager;
 
 /**
  * This function must be asynchronous because it reads files from a specified directory, which takes an unknown amount of time
@@ -128,12 +133,12 @@ async function registerSetupCommandsWithBot(botId: string, guildId: string) {
 /**
  * Returns a created BotDataRepository class instance so that we can interact with the MongoDB database.
  */
-async function createDatabaseConnection(): Promise<BotDataRepository> {
+async function createDatabaseConnection() {
     if (!database_collection_name) {
         throw new Error(`The database collection name is undefined or is a falsy value. Please check the environment variables file`)
     }
 
-    const database_manager = new DatabaseConnectionManager(
+    database_connection_manager = new DatabaseConnectionManager(
         database_connection_username,
         database_connection_password,
         database_connection_string,
@@ -144,18 +149,24 @@ async function createDatabaseConnection(): Promise<BotDataRepository> {
         database_collection_name
     );
 
-    await database_manager.initializeMongodbDatabaseInstance();
+    database_connection_manager.initializeMongodbDatabaseInstance();
 
-    if (!database_manager.database_instance) {
+    if (!database_connection_manager.database_instance) {
         throw new Error(`The database instance could not be initialized`);
     }
 
-    const bot_data_repository: BotDataRepository = new BotDataRepository(
-        database_manager.database_instance,
+    database_repository = new BotDataRepository(
+        database_connection_manager.database_instance,
         database_collection_name
     );
+}
 
-    return bot_data_repository;
+async function closeDatabaseConnection(): Promise<void> {
+    try {
+        await database_connection_manager.closeMongodbDatabaseInstanceConnectionPool();
+    } catch (error) {
+        throw error;
+    }
 }
 
 /**
@@ -166,7 +177,23 @@ discord_client_instance.on(Events.ClientReady,
      * The asynchronous function that is triggered when the bot process is started
      */
     async(): Promise<void> => {
-
+        const channel: Channel | undefined = discord_client_instance.channels.cache.get(test_channel_id);
+        try {
+            if (!database_connection_manager && !database_repository) {
+                await createDatabaseConnection();
+            }
+            if (channel && channel.isSendable()) {
+                channel.send({
+                    content: `The bot is online!`,
+                });
+            }
+        } catch (error) {
+            if (channel && channel.isSendable()) {
+                channel.send({
+                    content: `There was an error when attempting to start the bot: ${error}`,
+                });
+            }
+        }
 });
 
 /**

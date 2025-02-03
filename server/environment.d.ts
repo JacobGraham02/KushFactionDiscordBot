@@ -24,6 +24,7 @@ declare global {
             KUSH_BUY_CLICK_ON_BLU_RAY_DVD_ROLE_ID: string;
             KUSH_BIG_PIMPIN_ROLE_ID: string;
             KUSH_1_GRAM_OF_WEED_ROLE_ID: string;
+            TEST_CHANNEL_ID: string;
         }
     }
 }
