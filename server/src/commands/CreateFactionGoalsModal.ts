@@ -1,5 +1,12 @@
 import {ICommand} from "../interfaces/ICommand";
-import {ModalBuilder, SlashCommandBuilder, TextInputBuilder, TextInputStyle} from "discord.js";
+import {
+    ActionRowBuilder,
+    AnyComponentBuilder,
+    ModalBuilder,
+    SlashCommandBuilder,
+    TextInputBuilder,
+    TextInputStyle
+} from "discord.js";
 
 export default class CreateFactionGoalsModal implements ICommand {
     data: SlashCommandBuilder = new SlashCommandBuilder()
@@ -35,14 +42,38 @@ export default class CreateFactionGoalsModal implements ICommand {
 
         const mpc_value: TextInputBuilder = new TextInputBuilder()
             .setCustomId("faction_goal_mpc_value")
-            .setLabel("(Optional) Mpc value (0 - 10 digits)")
+            .setLabel("(Optional) Mpc value (0 - 3 digits)")
             .setRequired(false)
-            .setMaxLength(10)
+            .setMaxLength(999)
             .setPlaceholder(`(Example) 100`)
             .setStyle(TextInputStyle.Paragraph)
 
         const silver_bullion_value: TextInputBuilder = new TextInputBuilder()
             .setCustomId("faction_goal_silver_bullion")
-            .setLabel("(Optional) Silver bullion amount (0 - 5 digits)")
+            .setLabel("(Optional) Silver bullion amount (0 - 3 digits)")
+            .setRequired(false)
+            .setMaxLength(999)
+            .setPlaceholder(`(Example) 250`)
+
+        const gold_bullion_value: TextInputBuilder = new TextInputBuilder()
+            .setCustomId("faction_goal_gold_bullion")
+            .setLabel("(Optional) Gold bullion amount (0 - 3 digits)")
+            .setRequired(false)
+            .setMaxLength(999)
+            .setPlaceholder(`(Example) 250`)
+
+        const goal_name_row: ActionRowBuilder<TextInputBuilder> = new ActionRowBuilder<TextInputBuilder>().addComponents(goal_name);
+        const goal_description_row: ActionRowBuilder<TextInputBuilder> = new ActionRowBuilder<TextInputBuilder>().addComponents(goal_description);
+        const mpc_value_row: ActionRowBuilder<TextInputBuilder> = new ActionRowBuilder<TextInputBuilder>().addComponents(mpc_value);
+        const silver_bullion_row: ActionRowBuilder<TextInputBuilder> = new ActionRowBuilder<TextInputBuilder>().addComponents(silver_bullion_value);
+        const gold_bullion_row: ActionRowBuilder<TextInputBuilder> = new ActionRowBuilder<TextInputBuilder>().addComponents(gold_bullion_value);
+
+        modal.addComponents(goal_name_row, goal_description_row, mpc_value_row, silver_bullion_row, gold_bullion_row);
+
+        try {
+            await interaction.showModal(modal);
+        } catch (error) {
+            throw error;
+        }
     }
 }

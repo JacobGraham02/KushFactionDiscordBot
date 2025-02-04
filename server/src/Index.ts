@@ -285,9 +285,6 @@ discord_client_instance.on(Events.GuildCreate,
      */
     async (guild: Guild): Promise<void> => {
         try {
-            /**
-             * TODO: Insert check using database class to see if a document with the guild id already exists before attempting to create category and channels
-             */
             await createBotCategoryAndChannels(guild);
         } catch (error) {
             console.error(`There was an error when attempting to create a new category and channels within Discord`);
@@ -306,6 +303,7 @@ async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
             type: ChannelType.GuildCategory
         });
 
+        const bot_data: IBotDataDocument = {}
         const discord_channel_ids: Map<string, string> = new Map<string, string>();
         discord_channel_ids.set("discord_guild_id", guild.id);
 
@@ -315,7 +313,6 @@ async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
             "PZfans maps",
             "Farming channel",
             "Areas last looted",
-            "Feedback"
         ];
 
         const mongodb_field_names: string[] = [
@@ -324,7 +321,6 @@ async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
             "discord_pzfans_maps_channel_id",
             "discord_farming_channel_id",
             "discord_areas_looted_channel_id",
-            "discord_feedback_channel_id"
         ];
 
         for (let i: number = 0; i < channel_names.length; i++) {
@@ -339,6 +335,15 @@ async function createBotCategoryAndChannels(guild: Guild): Promise<void> {
                 discord_channel_ids.set(mongodb_channel_id_fields, created_channel.id);
             }
         }
+
+        bot_data.discord_guild_id = discord_channel_ids.get("discord_guild_id");
+        bot_data.discord_faction_goals_channel_id = discord_channel_ids.get("discord_faction_goals_channel_id");
+        bot_data.discord_resource_storage_channel_id = discord_channel_ids.get("discord_resource_storage_channel_id");
+        bot_data.discord_pzfans_maps_channel_id = discord_channel_ids.get("discord_pzfans_maps_channel_id");
+        bot_data.discord_farming_channel_id = discord_channel_ids.get("discord_farming_channel_id");
+        bot_data.discord_areas_looted_channel_id = discord_channel_ids.get("discord_areas_looted_channel_id");
+
+        await database_repository.create(bot_data)
     } catch (error) {
         throw error;
     }

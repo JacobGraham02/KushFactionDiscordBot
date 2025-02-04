@@ -8,7 +8,6 @@ export interface IFactionGoals {
             mpc_value?: number;
             gold_bullion?: number;
             silver_bullion?: number;
-            [resource_name: string]: number | undefined;
         };
         status?: "pending" | "in progress" | "completed" | "TBA";
     }
