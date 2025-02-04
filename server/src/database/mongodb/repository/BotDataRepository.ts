@@ -3,6 +3,7 @@ import {Collection, Db, DeleteResult, UpdateResult} from "mongodb";
 import IBotDataDocument from "../../../models/IBotDataDocument";
 import {IFactionGoals} from "../../../models/IFactionGoals";
 import IFactionResources from "../../../models/IFactionResources";
+import IFactionTraitBuild from "../../../models/IFactionTraitBuild";
 
 /**
  * Created a base CRUD class that is used to interact with a specific mongodb collection
@@ -118,6 +119,25 @@ export class BotDataRepository extends DatabaseRepository<any> {
                 {upsert: true}
             );
             return create_or_update_faction_resources_result;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Creates or updates a faction user player build
+     * @param id The id of the Discord user that the build is for
+     * @param data The structure of the data to submit to mongodb
+     * @return The update result from the upsert operation
+     */
+    async createOrUpdateFactionBuild(id: string, data: IFactionTraitBuild): Promise<UpdateResult<any>> {
+        try {
+            const create_or_update_faction_build_result: UpdateResult<any> = await this.collection.updateOne(
+                {discord_user_id: id},
+                {$set: data},
+                {upsert: true}
+            );
+            return create_or_update_faction_build_result;
         } catch (error) {
             throw error;
         }
