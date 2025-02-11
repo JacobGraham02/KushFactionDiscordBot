@@ -5,5 +5,5 @@ export interface IFactionGoals {
     faction_id: string;
     goal_name: string
     description?: string;
-    status: "pending" | "in progress" | "completed" | "TBA";
+    status?: string;
 }

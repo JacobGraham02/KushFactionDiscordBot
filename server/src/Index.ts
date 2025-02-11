@@ -26,6 +26,8 @@ Imports for use with the discord.js library
  */
 import CustomDiscordClient from "./utilities/CustomDiscordClient";
 import {
+    ActionRowBuilder,
+    ButtonBuilder, ButtonStyle,
     CategoryChannel,
     Channel,
     ChannelType,
@@ -214,7 +216,7 @@ discord_client_instance.on(Events.InteractionCreate,
         if (interaction.isButton()) {
             try {
                 const button_handler = new ButtonHandler(interaction);
-                await button_handler.handle();
+                await button_handler.handle(database_repository, kush_faction_server_id);
             } catch (error) {
                 if (!interaction.replied) {
                     await interaction.reply({
@@ -227,7 +229,7 @@ discord_client_instance.on(Events.InteractionCreate,
         } else if (interaction.isModalSubmit()) {
             try {
                 const form_handler = new FormHandler(interaction);
-                await form_handler.handle();
+                await form_handler.handle(database_repository, kush_faction_server_id);
             } catch (error) {
                 if (!interaction.replied) {
                     await interaction.reply({
@@ -409,17 +411,30 @@ custom_event_emitter!!.on("showFactionGoals",
                         .setColor(0x00AE86)
                         .setDescription("Goals for the Kush faction")
                         .addFields(
-                            {name: "Name:", value: `${goal_name}`},
-                            {name: "Description:", value: `${description ?? "No description available"}`},
-                            {name: "Status:", value: `${status}`})
+                            {name: "Name:", value: goal_name},
+                            {name: "Description:", value: description ?? "No description available"},
+                            {name: "Status:", value: status ?? "TBA"})
                         .setThumbnail("https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0")
                         .setTimestamp()
                         .setFooter({
                             text: 'Kush faction Discord bot',
                             iconURL: "https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0"
-                        })
+                        });
 
-                    channel.send({embeds: [embedded_message_builder]});
+                    const update_button: ButtonBuilder = new ButtonBuilder()
+                        .setCustomId(`update_goal_${goal_name}`)
+                        .setLabel("Update Goal")
+                        .setStyle(ButtonStyle.Primary)
+
+                    const delete_button: ButtonBuilder = new ButtonBuilder()
+                        .setCustomId(`delete_goal_${goal_name}`)
+                        .setLabel("Delete Goal")
+                        .setStyle(ButtonStyle.Danger)
+
+                    const button_action_row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents(update_button, delete_button);
+
+                    channel.send({embeds: [embedded_message_builder], components: [button_action_row]});
                 }
             }
         } catch (error) {

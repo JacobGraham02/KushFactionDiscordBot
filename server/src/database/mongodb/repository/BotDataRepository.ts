@@ -150,6 +150,53 @@ export class BotDataRepository extends DatabaseRepository<any> {
     }
 
     /**
+     * Deletes a faction goal
+     * @param goal_name The name of the faction goal to delete
+     * @returns `true` if the goal was successfully deleted, `false` otherwise
+     */
+    async deleteFactionGoal(goal_name: string): Promise<boolean> {
+        try {
+            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_GOALS);
+
+            const delete_result: DeleteResult = await collection.deleteOne({ goal_name });
+
+            if (delete_result.deletedCount === 0) {
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Gets a faction goal for a specific faction
+     * @param name The id of the faction to get a goal for
+     * @return IFactionGoals formatted object if data could be found, null otherwise
+     */
+    async getFactionGoal(name: string): Promise<IFactionGoals | null> {
+        try {
+            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_GOALS);
+
+            const faction_goal  = await this.collection.findOne({ goal_name: name });
+
+            if (!faction_goal) {
+                return null;
+            }
+
+            return {
+                faction_id: faction_goal.faction_id,
+                goal_name: faction_goal.goal_name,
+                description: faction_goal.description || "",
+                status: faction_goal.status || "TBA"
+            } as IFactionGoals;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
      *
      * Creates or updates faction resource count
      * @param id The id of the faction resource count Document
