@@ -1,9 +1,10 @@
 import {DatabaseRepository} from "../../repository/DatabaseRepository";
-import {Collection, Db, DeleteResult, UpdateResult} from "mongodb";
+import {Collection, Db, DeleteResult, FindCursor, UpdateResult} from "mongodb";
 import IBotDataDocument from "../../../models/IBotDataDocument";
 import {IFactionGoals} from "../../../models/IFactionGoals";
 import IFactionResources from "../../../models/IFactionResources";
 import IFactionTraitBuild from "../../../models/IFactionTraitBuild";
+import {Collections} from "../../../enums/Collections";
 
 /**
  * Created a base CRUD class that is used to interact with a specific mongodb collection
@@ -17,9 +18,26 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @param database_instance instance of mongodb database connection
      * @param collection_name name of mongodb database collection
      */
-    constructor(private database_instance: Db, private collection_name: string) {
+    constructor(private database_instance: Db, private collection_name: Collections) {
         super();
-        this.collection = database_instance.collection(collection_name);
+        this.collection = this.getCollection(collection_name);
+    }
+
+    /**
+     * Factory method to dynamically switch collections based on the name provided
+     * @param collection_name The name of the target collection
+     */
+    getCollection(collection_name: string): Collection<any> {
+        return this.database_instance.collection(collection_name);
+    }
+
+    /**
+     * Added functionality to change the collection name that we are querying. Because NoSQL do not have things like foreign keys
+     * and other relationships that SQL has, we have to compensate using this
+     * @param collection_name the name of our target collection
+     */
+    changeCollection(collection_name: string) {
+        this.collection = this.getCollection(collection_name);
     }
 
     /**
@@ -106,6 +124,33 @@ export class BotDataRepository extends DatabaseRepository<any> {
     }
 
     /**
+     * Gets faction goals for a specific faction
+     * @param id The id of the faction to get goals for
+     * @return IFactionGoals formatted object if data could be found, null otherwise
+     */
+    async getFactionGoals(id: string): Promise<IFactionGoals[] | null> {
+        try {
+            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_GOALS);
+
+            const faction_goals  = await this.collection.find({ faction_id: id }).toArray();
+
+            if (faction_goals.length <= 0) {
+                return null;
+            }
+
+            return faction_goals.map(goal => ({
+                faction_id: goal.faction_id,
+                goal_name: goal.goal_name,
+                description: goal.description || "",
+                status: goal.status || "TBA"
+            })) as IFactionGoals[];
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     *
      * Creates or updates faction resource count
      * @param id The id of the faction resource count Document
      * @param data The data that conforms to IFactionResources to be entered into the database
@@ -115,10 +160,32 @@ export class BotDataRepository extends DatabaseRepository<any> {
         try {
             const create_or_update_faction_resources_result: UpdateResult<any> = await this.collection.updateOne(
                 {faction_resources_id: id},
-                {$set: data},
+                {$set: { resources: data.resources }},
                 {upsert: true}
             );
             return create_or_update_faction_resources_result;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Gets faction resources for a specific faction
+     * @param id The id of the faction to get resources for
+     */
+    async getFactionResources(id: string): Promise<IFactionResources | null> {
+        try {
+            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_RESOURCES);
+            const faction_resources = await this.collection.findOne({ faction_id: id });
+
+            if (!faction_resources) {
+                return null;
+            }
+
+            return {
+                faction_id: faction_resources.faction_id,
+                resources: faction_resources.resources || {}
+            } as IFactionResources;
         } catch (error) {
             throw error;
         }

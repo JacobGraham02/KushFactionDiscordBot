@@ -10,7 +10,6 @@ export default class DatabaseConnectionManager {
     database_connection_maximum_pool_size: number | undefined;
     database_connection_minimum_pool_size: number | undefined;
     database_name: string | undefined;
-    database_collection_name: string | undefined;
     database_instance: Db | null | undefined;
     mongodb_database_client: MongoClient | undefined;
 
@@ -23,7 +22,6 @@ export default class DatabaseConnectionManager {
      * @param database_maximum_pool_size maximum pool size for database connections
      * @param database_name name of a database in the mongodb cluster
      * @param database_instance an instance of the database that exists in mongodb
-     * @param database_collection_name name of a collection within the database
      */
     constructor(database_username: string | undefined,
                 database_password: string | undefined,
@@ -31,8 +29,7 @@ export default class DatabaseConnectionManager {
                 database_minimum_pool_size: number | undefined,
                 database_maximum_pool_size: number | undefined,
                 database_name: string | undefined,
-                database_instance: Db | null,
-                database_collection_name: string | undefined) {
+                database_instance: Db | null) {
 
         if (database_username) {
             this.database_username = database_username;
@@ -54,9 +51,6 @@ export default class DatabaseConnectionManager {
         }
         if (database_instance) {
             this.database_instance = database_instance;
-        }
-        if (database_collection_name) {
-            this.database_collection_name = database_collection_name;
         }
         if (this.database_connection_string && this.database_username && this.database_password) {
             this.database_connection_string = this.database_connection_string

@@ -29,7 +29,7 @@ import {
     CategoryChannel,
     Channel,
     ChannelType,
-    Collection,
+    Collection, EmbedBuilder,
     Events,
     GatewayIntentBits,
     Guild,
@@ -41,6 +41,8 @@ import {ICommand} from "./interfaces/ICommand";
 import {BotDataRepository} from "./database/mongodb/repository/BotDataRepository";
 import IBotDataDocument from "./models/IBotDataDocument";
 import {UpdateResult} from "mongodb";
+import {Collections} from "./enums/Collections";
+import {IFactionGoals} from "./models/IFactionGoals";
 
 /*
 Variable values defined in the .env file
@@ -138,10 +140,6 @@ async function registerSetupCommandsWithBot(botId: string, guildId: string) {
  * Returns a created BotDataRepository class instance so that we can interact with the MongoDB database.
  */
 async function createDatabaseConnection() {
-    if (!database_collection_name) {
-        throw new Error(`The database collection name is undefined or is a falsy value. Please check the environment variables file`)
-    }
-
     database_connection_manager = new DatabaseConnectionManager(
         database_connection_username,
         database_connection_password,
@@ -149,11 +147,10 @@ async function createDatabaseConnection() {
         database_connection_min_pool_size,
         database_connection_max_pool_size,
         database_name,
-        null,
-        database_collection_name
+        null
     );
 
-    database_connection_manager.initializeMongodbDatabaseInstance();
+    await database_connection_manager.initializeMongodbDatabaseInstance();
 
     if (!database_connection_manager.database_instance) {
         throw new Error(`The database instance could not be initialized`);
@@ -161,7 +158,7 @@ async function createDatabaseConnection() {
 
     database_repository = new BotDataRepository(
         database_connection_manager.database_instance,
-        database_collection_name
+        Collections.BOT_DATA
     );
 }
 
@@ -390,6 +387,40 @@ custom_event_emitter!!.on("updateBotChannelData",
                 channel.send({
                     content: `Bot has been updated with new Discord channel ids`
                 });
+            }
+        } catch (error) {
+            throw error;
+        }
+    });
+
+custom_event_emitter!!.on("showFactionGoals",
+
+    async(channel_id: string): Promise<void> => {
+        try {
+            const show_faction_goals_response: IFactionGoals[] | null = await database_repository.getFactionGoals(kush_faction_server_id);
+            const channel: Channel | undefined = discord_client_instance.channels.cache.get(channel_id);
+            if (!channel) {
+                throw new Error(`The channel in which to send the faction goals is undefined`);
+            }
+            if (show_faction_goals_response && channel.isSendable()) {
+                for (const { faction_id, goal_name, description, status } of Object.values(show_faction_goals_response)) {
+                    const embedded_message_builder: EmbedBuilder = new EmbedBuilder()
+                        .setTitle("Faction goals")
+                        .setColor(0x00AE86)
+                        .setDescription("Goals for the Kush faction")
+                        .addFields(
+                            {name: "Name:", value: `${goal_name}`},
+                            {name: "Description:", value: `${description ?? "No description available"}`},
+                            {name: "Status:", value: `${status}`})
+                        .setThumbnail("https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0")
+                        .setTimestamp()
+                        .setFooter({
+                            text: 'Kush faction Discord bot',
+                            iconURL: "https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0"
+                        })
+
+                    channel.send({embeds: [embedded_message_builder]});
+                }
             }
         } catch (error) {
             throw error;
