@@ -9,6 +9,7 @@ import {
 import InteractionHandler from "../InteractionHandler";
 import {BotDataRepository} from "../../database/mongodb/repository/BotDataRepository";
 import {IFactionGoals} from "../../models/IFactionGoals";
+import IBotDataDocument from "../../models/IBotDataDocument";
 
 /**
  * Uses abstract class InteractionHandler to provide implementation specifically for
@@ -34,7 +35,7 @@ export default class ButtonHandler extends InteractionHandler {
                 const goal_data: IFactionGoals | null = await database_repository.getFactionGoal(goal_name);
                 if (!goal_data) {
                     await this.button_interaction.reply({
-                        content: `The goal **${goal_name}** does not exist.`,
+                        content: `The goal **${goal_name}** does not exist`,
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -90,6 +91,71 @@ export default class ButtonHandler extends InteractionHandler {
                 );
 
                 await this.button_interaction.showModal(delete_confirmation_modal);
+                break;
+            }
+            case button_id.startsWith("update_bot_data_"): {
+                const bot_data_document: IBotDataDocument | null = await database_repository.findById(faction_id);
+                if (!bot_data_document) {
+                    await this.button_interaction.reply({
+                        content: `No bot data could be found`,
+                        flags: MessageFlags.Ephemeral
+                    });
+                    return;
+                }
+
+                const update_modal: ModalBuilder = new ModalBuilder()
+                    .setCustomId(`update_bot_data_modal_${faction_id}`)
+                    .setTitle(`Update Bot Data: ${faction_id}`);
+
+                const faction_goals_channel_id: TextInputBuilder = new TextInputBuilder()
+                    .setCustomId("faction_goals_channel_id")
+                    .setLabel("Goals channel id")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("(Optional) Set new goals channel id")
+                    .setValue(bot_data_document.discord_faction_goals_channel_id ?? "")
+                    .setRequired(false);
+
+                const faction_resource_storage_channel_id: TextInputBuilder = new TextInputBuilder()
+                    .setCustomId("faction_resource_storage_channel_id")
+                    .setLabel("Resource storage channel id")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("(Optional) Set new resource storage channel id")
+                    .setValue(bot_data_document.discord_resource_storage_channel_id ?? "")
+                    .setRequired(false);
+
+                const faction_pzfans_maps_channel_id: TextInputBuilder = new TextInputBuilder()
+                    .setCustomId("faction_pzfans_maps_channel_id")
+                    .setLabel("Pzfans maps channel id")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("(Optional) Set new pzfans maps channel id")
+                    .setValue(bot_data_document.discord_pzfans_maps_channel_id ?? "")
+                    .setRequired(false)
+
+                const faction_farming_channel_id: TextInputBuilder = new TextInputBuilder()
+                    .setCustomId("faction_farming_channel_id")
+                    .setLabel("Farming channel id")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("(Optional) Set new farm channel id")
+                    .setValue(bot_data_document.discord_farming_channel_id ?? "")
+                    .setRequired(false);
+
+                const faction_areas_looted_channel_id: TextInputBuilder = new TextInputBuilder()
+                    .setCustomId("faction_areas_looted_channel_id")
+                    .setLabel("Areas looted channel id")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("(Optional) Set new channel id")
+                    .setValue(bot_data_document.discord_areas_looted_channel_id ?? "")
+                    .setRequired(false)
+
+                update_modal.addComponents(
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(faction_goals_channel_id),
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(faction_resource_storage_channel_id),
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(faction_pzfans_maps_channel_id),
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(faction_farming_channel_id),
+                    new ActionRowBuilder<TextInputBuilder>().addComponents(faction_areas_looted_channel_id)
+                );
+
+                await this.button_interaction.showModal(update_modal);
                 break;
             }
             case button_id === "farming_button": {

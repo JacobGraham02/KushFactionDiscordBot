@@ -47,4 +47,16 @@ export default class CustomEventEmitter extends EventEmitter {
             throw error;
         }
     }
+
+    /**
+     * Emits an event that will trigger the application to show all channel data registered with the bot
+     * @param channel_id the target Discord channel id at which to send the data
+     */
+    public emitShowBotChannelDataEvent(channel_id: string): void {
+        try {
+            this.emit('showBotChannelData', channel_id);
+        } catch (error) {
+            throw error;
+        }
+    }
 }

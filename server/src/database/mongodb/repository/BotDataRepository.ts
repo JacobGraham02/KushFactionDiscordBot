@@ -48,7 +48,19 @@ export class BotDataRepository extends DatabaseRepository<any> {
     async findById(id: string): Promise<IBotDataDocument | null> {
         try {
             const bot_data_collection: IBotDataDocument | null = await this.collection.findOne({ discord_guild_id: id});
-            return bot_data_collection;
+
+            if (!bot_data_collection) {
+                throw new Error(`The bot data document is null`);
+            }
+
+            return {
+                discord_guild_id: bot_data_collection.discord_guild_id,
+                discord_faction_goals_channel_id: bot_data_collection.discord_faction_goals_channel_id,
+                discord_resource_storage_channel_id: bot_data_collection.discord_resource_storage_channel_id,
+                discord_pzfans_maps_channel_id: bot_data_collection.discord_pzfans_maps_channel_id,
+                discord_farming_channel_id: bot_data_collection.discord_areas_looted_channel_id,
+                discord_areas_looted_channel_id: bot_data_collection.discord_areas_looted_channel_id,
+            } as IBotDataDocument;
         } catch (error) {
             throw error;
         }
@@ -220,19 +232,19 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * Gets faction resources for a specific faction
      * @param id The id of the faction to get resources for
      */
-    async getFactionResources(id: string): Promise<IFactionResources | null> {
+    async getFactionResources(id: string): Promise<IFactionResources[] | null> {
         try {
             const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_RESOURCES);
-            const faction_resources = await this.collection.findOne({ faction_id: id });
+            const faction_resources = await this.collection.find({ faction_id: id }).toArray()
 
             if (!faction_resources) {
                 return null;
             }
 
-            return {
-                faction_id: faction_resources.faction_id,
-                resources: faction_resources.resources || {}
-            } as IFactionResources;
+            return faction_resources.map(resource => ({
+                faction_id: resource.faction_id,
+                resources: resource.resources || {}
+            })) as IFactionResources[];
         } catch (error) {
             throw error;
         }

@@ -3,6 +3,7 @@ import {ModalSubmitInteraction, MessageFlags } from "discord.js";
 import {BotDataRepository} from "../../database/mongodb/repository/BotDataRepository";
 import {IFactionGoals} from "../../models/IFactionGoals";
 import {UpdateResult} from "mongodb";
+import IBotDataDocument from "../../models/IBotDataDocument";
 
 /**
  * Uses abstract class InteractionHandler to provide implementation specifically for
@@ -34,10 +35,20 @@ export default class FormHandler extends InteractionHandler {
                     status: status
                 }
 
-                const database_result: UpdateResult<any> = await database_repository.createOrUpdateFactionGoals(faction_id, data);
+                try {
+                    const database_result: UpdateResult<any> = await database_repository.createOrUpdateFactionGoals(faction_id, data);
+                    if (!database_result) {
+                        await this.form_interaction.reply({
+                            content: `Could not update **${goal_name}**. Please try again or contact the bot administrator`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
+                } catch (error) {
+                    throw error;
+                }
 
                 await this.form_interaction.reply({
-                    content: `✅ Goal **${goal_name}** updated successfully.`,
+                    content: `Goal **${goal_name}** updated successfully.`,
                     flags: MessageFlags.Ephemeral
                 });
                 break;
@@ -55,14 +66,16 @@ export default class FormHandler extends InteractionHandler {
                     return;
                 }
 
-                const deletion_result: boolean = await database_repository.deleteFactionGoal(goal_name);
-
-                if (!deletion_result) {
-                    await this.form_interaction.reply({
-                       content: `Could not delete **${goal_name}**. Please try again or contact the bot administrator`,
-                       flags: MessageFlags.Ephemeral
-                    });
-                    break;
+                try {
+                    const deletion_result: boolean = await database_repository.deleteFactionGoal(goal_name);
+                    if (!deletion_result) {
+                        await this.form_interaction.reply({
+                            content: `Could not delete **${goal_name}**. Please try again or contact the bot administrator`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
+                } catch (error) {
+                    throw error;
                 }
 
                 await this.form_interaction.reply({
@@ -71,6 +84,42 @@ export default class FormHandler extends InteractionHandler {
                 });
                 break;
             }
+            case form_id.startsWith("update_bot_data_modal_"): {
+                const faction_id: string = form_id.replace("confirm_delete_goal_", "");
+                const faction_goals_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_goals_channel_id");
+                const faction_resource_storage_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_resource_storage_channel_id");
+                const faction_pzfans_maps_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_pzfans_maps_channel_id");
+                const faction_farming_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_farming_channel_id");
+                const faction_areas_looted_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_areas_looted_channel_id");
+
+                const data: IBotDataDocument = {
+                    discord_faction_goals_channel_id: faction_goals_channel_id,
+                    discord_resource_storage_channel_id: faction_resource_storage_channel_id,
+                    discord_pzfans_maps_channel_id: faction_pzfans_maps_channel_id,
+                    discord_farming_channel_id: faction_farming_channel_id,
+                    discord_areas_looted_channel_id: faction_areas_looted_channel_id
+                }
+
+                try {
+                    const database_result: UpdateResult<any> | null = await database_repository.update(data);
+                    if (!database_result) {
+                        await this.form_interaction.reply({
+                            content: `Could not update bot data for guild **${faction_id}**. Please try again or contact the bot administrator`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
+                } catch (error) {
+                    throw error;
+                }
+
+                await this.form_interaction.reply({
+                    content: `Bot data for guild **${faction_id}** updated successfully`,
+                    flags: MessageFlags.Ephemeral
+                });
+
+                break;
+            }
+
             case form_id === 'farming_form': {
                 await this.form_interaction.reply({
                     content: `You have successfully submitted the farming data form`,
