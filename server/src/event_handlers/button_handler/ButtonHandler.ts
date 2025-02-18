@@ -1,6 +1,6 @@
 import {
     ActionRowBuilder,
-    ButtonInteraction,
+    ButtonInteraction, Message,
     MessageFlags,
     ModalBuilder,
     TextInputBuilder,
@@ -29,6 +29,33 @@ export default class ButtonHandler extends InteractionHandler {
         const button_id: string = this.button_interaction.customId;
 
         switch (true) {
+            case button_id.startsWith("mark_looted_"): {
+                const area_id: string = button_id.replace("mark_looted_", "");
+                const message: Message<boolean> = this.button_interaction.message;
+                const current_unix_timestamp: number = Math.floor(Date.now() / 1000);
+                const timestamp_for_discord = `<t:${current_unix_timestamp}:F>`;
+
+                let updated_content: string = message.content;
+
+                const timestampRegex = /Last Looted: <t: \d+:F>/;
+
+                if (timestampRegex.test(updated_content)) {
+                    updated_content = updated_content.replace(timestampRegex, `Last looted: ${timestamp_for_discord}`);
+                } else {
+                    updated_content = updated_content.replace("Last looted: N/A", `Last looted: ${timestamp_for_discord}`);
+                }
+
+                await message.edit({
+                    content: updated_content
+                });
+
+                await this.button_interaction.reply({
+                    content: `Updated loot timestamp`,
+                    flags: MessageFlags.Ephemeral
+                });
+
+                break;
+            }
             case button_id.startsWith("update_goal_"): {
                 const goal_name: string = button_id.replace("update_goal_", "");
 

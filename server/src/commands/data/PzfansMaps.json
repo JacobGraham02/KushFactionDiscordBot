@@ -5,56 +5,61 @@
     "url": "https://pzfans.com/en/full_map/"
   },
   {
+    "id": "ravencreek",
     "label": "Raven Creek",
     "description": "Raven Creek",
     "url": "https://pzfans.com/en/RavenCreek/"
   },
   {
+    "id": "utopia",
     "label": "Utopia",
     "description": "Utopia",
     "url": "https://pzfans.com/en/Utopia/"
   },
   {
+    "id": "trelai",
     "label": "Trelai",
     "description": "Trelai",
     "url": "https://pzfans.com/en/Trelai_4x4_Riverside_Expansion/"
   },
   {
+    "id": "littletownship",
     "label": "Little Township",
     "description": "Little Township",
     "url": "https://pzfans.com/en/Little_Township/"
   },
   {
-    "label": "Louisville Shipping Port",
-    "description": "Louisville Shipping Port",
-    "url": "https://pzfans.com/en/louisville_shipping_port/"
-  },
-  {
+    "id": "newalbany",
     "label": "New Albany",
     "description": "New Albany",
     "url": "https://pzfans.com/en/new_albany/"
   },
   {
+    "id": "newcumberland",
     "label": "New Cumberland",
     "description": "New Cumberland",
     "url": "https://pzfans.com/en/lake_cumberland/"
   },
   {
+    "id": "monmouthcounty",
     "label": "Monmouth County",
     "description": "Monmouth County",
     "url": "https://pzfans.com/en/Monmouth_County_New/"
   },
   {
+    "id": "pitstop",
     "label": "Pitstop",
     "description": "Pitstop",
     "url": "https://pzfans.com/en/Pitstop/"
   },
   {
+    "id": "coryerdon",
     "label": "Coryerdon",
     "description": "Coryerdon",
     "url": "https://pzfans.com/en/coryerdon/"
   },
   {
+    "id": "rabbithash",
     "label": "Rabbit Hash",
     "description": "Rabbit Hash",
     "url": "https://pzfans.com/en/Rabbit_Hash_KY/"
