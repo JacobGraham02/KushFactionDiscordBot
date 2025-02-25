@@ -5,7 +5,7 @@ import {
     ActionRowBuilder,
     AnyComponentBuilder,
     StringSelectMenuBuilder,
-    StringSelectMenuOptionBuilder, MessageFlags,
+    StringSelectMenuOptionBuilder, MessageFlags, StringSelectMenuInteraction,
 } from "discord.js";
 import * as fs from "node:fs";
 import {ICommand} from "../interfaces/ICommand";
@@ -66,14 +66,15 @@ export default class CreatePzfansMapLinks implements ICommand {
 async function createPzfansDropdownMenu(json_file_path: string): Promise<ActionRowBuilder<AnyComponentBuilder>> {
     try {
         const json_data: string = await fs.promises.readFile(`${json_file_path}`, "utf-8");
-        const option_menu_data: IPzFansMapItem[] = JSON.parse(json_data);
+        const mapDataObject = JSON.parse(json_data);
+        const option_menu_data = Object.values(mapDataObject);
 
-        const menu_options: StringSelectMenuOptionBuilder[] = option_menu_data.map(map_item => {
+        const menu_options: StringSelectMenuOptionBuilder[] = option_menu_data.map(((map_item: any, index: number): StringSelectMenuOptionBuilder => {
             return new StringSelectMenuOptionBuilder()
                 .setLabel(map_item.label)
                 .setDescription(map_item.description)
-                .setValue(map_item.url);
-        });
+                .setValue(index.toString());
+        }));
 
         const select_pzfans_map: StringSelectMenuBuilder = new StringSelectMenuBuilder()
             .setCustomId("PZfans_map_selector_menu")

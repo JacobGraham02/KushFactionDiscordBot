@@ -12,5 +12,5 @@ export default abstract class InteractionHandler {
      */
     constructor(protected interaction: Interaction) {}
 
-    abstract handle(database_repository: BotDataRepository, faction_id: string): Promise<void>;
+    abstract handle(database_repository?: BotDataRepository, faction_id?: string): Promise<void>;
 }

@@ -37,7 +37,7 @@ import {
     Guild,
     MessageFlags,
     REST,
-    Routes, TextChannel
+    Routes, StringSelectMenuInteraction, TextChannel
 } from 'discord.js';
 import {ICommand} from "./interfaces/ICommand";
 import {BotDataRepository} from "./database/mongodb/repository/BotDataRepository";
@@ -45,6 +45,7 @@ import IBotDataDocument from "./models/IBotDataDocument";
 import {UpdateResult} from "mongodb";
 import {Collections} from "./enums/Collections";
 import {IFactionGoals} from "./models/IFactionGoals";
+import SelectMenuHandler from "./event_handlers/select_menu_handler/SelectMenuHandler";
 
 /*
 Variable values defined in the .env file
@@ -223,7 +224,18 @@ discord_client_instance.on(Events.InteractionCreate,
                 }
             }
         } else if (interaction.isStringSelectMenu()) {
-
+            try {
+                const select_menu_handler = new SelectMenuHandler(interaction);
+                await select_menu_handler.handle();
+            } catch (error) {
+                if (!interaction.replied) {
+                    await interaction.reply({
+                       content: `There was an error when attempting to list this map. Please try again or inform the bot administrator: ${error}`,
+                       flags: MessageFlags.Ephemeral
+                    });
+                    return;
+                }
+            }
         } else if (interaction.isModalSubmit()) {
             try {
                 const form_handler = new FormHandler(interaction);

@@ -1,67 +1,74 @@
-[
-  {
+{
+  "1": {
+    "id": "vanillamap",
     "label": "Vanilla Map",
-    "description": "Vanilla Map",
+    "description": "Vanilla Map. Can use this to cross-reference with other maps",
     "url": "https://pzfans.com/en/full_map/"
   },
-  {
+  "2": {
+    "id": "auroramaphosting",
+    "label": "Aurora map hosting",
+    "description": "Aurora Map Hosting which is a vanilla map with some extra maps you can dynamically load for cross-referencing",
+    "url": "https://mapas.aurorahosting.com.br/"
+  },
+  "3": {
     "id": "ravencreek",
     "label": "Raven Creek",
-    "description": "Raven Creek",
+    "description": "Raven Creek. Hellhole of zombies and close quarters combat with high quality loot locations. Do not know zone",
     "url": "https://pzfans.com/en/RavenCreek/"
   },
-  {
+  "4": {
     "id": "utopia",
     "label": "Utopia",
-    "description": "Utopia",
+    "description": "Tons of zombies with a little bit of loot in the mall. Orange zone",
     "url": "https://pzfans.com/en/Utopia/"
   },
-  {
+  "5": {
     "id": "trelai",
     "label": "Trelai",
-    "description": "Trelai",
+    "description": "Map creator was high as shit when making this. Tons of military containers near the air strip with tons of zombies to match. Red zone",
     "url": "https://pzfans.com/en/Trelai_4x4_Riverside_Expansion/"
   },
-  {
+  "6": {
     "id": "littletownship",
     "label": "Little Township",
-    "description": "Little Township",
+    "description": "Goated town that has loot spawns equivalent to 5-10 houses in Muldraugh or Rosewood. A few zombies. Yellow zone",
     "url": "https://pzfans.com/en/Little_Township/"
   },
-  {
+  "7": {
     "id": "newalbany",
     "label": "New Albany",
-    "description": "New Albany",
+    "description": "New undiscovered map that is North of Louisville, A lot of industrial loot there, guarded by a lot of zombies. Do not know zone.",
     "url": "https://pzfans.com/en/new_albany/"
   },
-  {
+  "8": {
     "id": "newcumberland",
     "label": "New Cumberland",
-    "description": "New Cumberland",
+    "description": "Contains high quality loot locations like Llamazon Warehouse and an army surplus store. Zombie amount similar to Trelai. Orange zone.",
     "url": "https://pzfans.com/en/lake_cumberland/"
   },
-  {
+  "9": {
     "id": "monmouthcounty",
     "label": "Monmouth County",
-    "description": "Monmouth County",
+    "description": "Monmouth County. Llamazon Warehouse and Mall. Zombie amount is similar to New Cumberland. Orange zone",
     "url": "https://pzfans.com/en/Monmouth_County_New/"
   },
-  {
+  "10": {
     "id": "pitstop",
     "label": "Pitstop",
-    "description": "Pitstop",
+    "description": "Pitstop. Avoid unless you want to become zombie food. Do not know zone.",
     "url": "https://pzfans.com/en/Pitstop/"
   },
-  {
+  "11": {
     "id": "coryerdon",
     "label": "Coryerdon",
-    "description": "Coryerdon",
+    "description": "Coryerdon. 2 Massive police stations, hospital(s), Gigamart(s), warehouses, military loot spawn area, a ton of loot. Same zombie population as Trelai. Red zone.",
     "url": "https://pzfans.com/en/coryerdon/"
   },
-  {
+  "12": {
     "id": "rabbithash",
     "label": "Rabbit Hash",
-    "description": "Rabbit Hash",
+    "description": "Rabbit Hash. Spawns surprisingly good military loot and weapons. The hidden forest military tower spawns awesome loot, with a lot of zombies. Yellow zone",
     "url": "https://pzfans.com/en/Rabbit_Hash_KY/"
   }
-]
+}
