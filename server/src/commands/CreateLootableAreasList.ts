@@ -15,10 +15,10 @@ import fs from "fs";
  */
 export default class CreateLootableAreasList implements ICommand {
     data: SlashCommandBuilder = new SlashCommandBuilder()
-        .setName('lootable_areas')
+        .setName('create-lootable-areas')
         .setDescription('Displays a list of lootable towns')
 
-    authorization_role_name: string[] = [""];
+    authorization_role_name: string[] = [];
 
     async execute(interaction: any): Promise<void> {
         try {

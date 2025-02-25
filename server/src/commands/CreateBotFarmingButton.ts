@@ -15,7 +15,7 @@ export default class CreateBotFarmingButton implements ICommand {
         .setName(`create-bot-farming-button`)
         .setDescription(`Adds 1 button for informing when the farm has been watered last`)
 
-    authorization_role_name: string[] = [""]
+    authorization_role_name: string[] = []
 
     /**
      * Replies to the user interaction /create-bot-role-button by sending a button that will grant administrative permissions to the bot

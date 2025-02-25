@@ -10,9 +10,9 @@ import {
 
 export default class CreateFactionGoalsModal implements ICommand {
     data: SlashCommandBuilder = new SlashCommandBuilder()
-        .setName('create_faction_goal')
+        .setName('create-faction-goal')
         .setDescription(`Create a faction goal`)
-    authorization_role_name: string[] = [""]
+    authorization_role_name: string[] = []
 
     /**
      * Replies to the user interaction /create_faction_goal by sending a modal for them to fill

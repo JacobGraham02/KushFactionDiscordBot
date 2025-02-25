@@ -4,9 +4,9 @@ import CustomEventEmitter from "../utilities/CustomEventEmitter";
 
 export default class ShowFactionGoals implements ICommand {
     data: SlashCommandBuilder = new SlashCommandBuilder()
-        .setName('show_faction_goals')
+        .setName('show-faction-goals')
         .setDescription('Displays faction goals in an embedded message')
-    authorization_role_name: string[] = [""];
+    authorization_role_name: string[] = [];
 
     async execute(interaction: any): Promise<void> {
         const custom_event_emitter: CustomEventEmitter = CustomEventEmitter.getCustomEventEmitterInstance();

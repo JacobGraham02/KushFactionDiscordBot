@@ -52,6 +52,7 @@ Variable values defined in the .env file
 const discord_application_id: string | undefined = process.env.BOT_APPLICATION_ID;
 const discord_client_id: string | undefined = process.env.BOT_CLIENT_ID;
 const discord_client_secret: string | undefined = process.env.BOT_CLIENT_SECRET;
+const discord_bot_token: string | undefined = process.env.BOT_TOKEN;
 
 const database_connection_username: string | undefined = process.env.USERNAME;
 const database_connection_password: string | undefined = process.env.PASSWORD;
@@ -90,46 +91,47 @@ JSON file for later retrieval if necessary
 const commands: any[] = [];
 let database_repository: BotDataRepository;
 let database_connection_manager: DatabaseConnectionManager;
-let custom_event_emitter: CustomEventEmitter;
+let custom_event_emitter: CustomEventEmitter = CustomEventEmitter.getCustomEventEmitterInstance();
 
 /**
  * This function must be asynchronous because it reads files from a specified directory, which takes an unknown amount of time
  */
-async function loadSetupCommandsIntoCollection() {
-       const commands_folder_path: string = path.join(__dirname, "../dist/commands");
-       const filtered_command_files: string[] = fs.
-              readdirSync(commands_folder_path)
-              .filter((file) => file !== "deploy-commands.ts" && file.endsWith(".js"));
-       discord_client_instance.discord_commands = new Collection();
+async function loadSetupCommandsIntoCollection(): Promise<void> {
+    const commands_folder_path: string = path.join(__dirname, "../dist/commands");
+    const filtered_command_files: string[] = fs.
+    readdirSync(commands_folder_path)
+        .filter((file: string): boolean => file !== "deploy-commands.ts" && file.endsWith(".js"));
+    discord_client_instance.discord_commands = new Collection();
 
-       for (const command_file of filtered_command_files) {
-              const command_file_path: any = path.join(commands_folder_path, command_file);
-              const command: any = await import(command_file_path);
-              const command_class: any = command.default;
+    for (const command_file of filtered_command_files) {
+        const command_file_path: any = path.join(commands_folder_path, command_file);
+        const command: any = await import(command_file_path);
+        const command_class: any = command.default;
 
-              if (typeof command_class === "function") {
-                  const command_instance: ICommand = new command_class();
-                  discord_client_instance.discord_commands.set(
-                      command_instance.data.name,
-                      command_instance
-                  );
-                  commands.push(command_instance.data);
-              }
-       }
+        if (typeof command_class === "function") {
+            const command_instance: ICommand = new command_class();
+            discord_client_instance.discord_commands.set(
+                command_instance.data.name,
+                command_instance
+            );
+            commands.push(command_instance.data);
+        }
+    }
 }
 
 /**
  * This function must be asynchronous because it registers commands with a Discord bot, which takes an unknown amount of time.
  * It uses the Discord API to register these commands.
- * @param botId the id of the bot as it exists on Discord
- * @param guildId the id of the server as it exists on Discord
+ * @param bot_token the token for the bot as it exists on Discord
+ * @param bot_application_id the id of the bot as it exists on Discord
+ * @param guild_id the id of the server as it exists on Discord
  */
-async function registerSetupCommandsWithBot(botId: string, guildId: string) {
-       if (botId && guildId) {
-              const rest = new REST({version:"10"}).setToken(botId);
+async function registerSetupCommandsWithBot(bot_token: string, bot_application_id: string, guild_id: string): Promise<void> {
+       if (bot_token && bot_application_id && guild_id) {
+              const rest = new REST({version:"10"}).setToken(bot_token);
 
               try {
-                  await rest.put(Routes.applicationGuildCommands(botId, guildId), {
+                  await rest.put(Routes.applicationGuildCommands(bot_application_id, guild_id), {
                       body: commands,
                   });
               } catch (error) {
@@ -141,15 +143,13 @@ async function registerSetupCommandsWithBot(botId: string, guildId: string) {
 /**
  * Returns a created BotDataRepository class instance so that we can interact with the MongoDB database.
  */
-async function createDatabaseConnection() {
+async function createDatabaseConnection(): Promise<void> {
     database_connection_manager = new DatabaseConnectionManager(
-        database_connection_username,
-        database_connection_password,
         database_connection_string,
         database_connection_min_pool_size,
         database_connection_max_pool_size,
         database_name,
-        null
+        null,
     );
 
     await database_connection_manager.initializeMongodbDatabaseInstance();
@@ -182,24 +182,20 @@ discord_client_instance.on(Events.ClientReady,
      * we do not have to use the 'new' keyword for instantiation
      */
     async(): Promise<void> => {
-        const channel: Channel | undefined = discord_client_instance.channels.cache.get(test_channel_id);
-        custom_event_emitter = CustomEventEmitter.getCustomEventEmitterInstance();
-        try {
-            if (!database_connection_manager && !database_repository) {
-                await createDatabaseConnection();
-            }
-            if (channel && channel.isSendable()) {
-                channel.send({
-                    content: `The bot is online!`,
-                });
-            }
-        } catch (error) {
-            if (channel && channel.isSendable()) {
-                channel.send({
-                    content: `There was an error when attempting to start the bot: ${error}`,
-                });
-            }
-        }
+        console.log("Bot is ready");
+        // try {
+        //     if (channel && channel.isSendable()) {
+        //         channel.send({
+        //             content: `The bot is online!`,
+        //         });
+        //     }
+        // } catch (error) {
+        //     if (channel && channel.isSendable()) {
+        //         channel.send({
+        //             content: `There was an error when attempting to start the bot: ${error}`,
+        //         });
+        //     }
+        // }
 });
 
 /**
@@ -226,6 +222,8 @@ discord_client_instance.on(Events.InteractionCreate,
                     return;
                 }
             }
+        } else if (interaction.isStringSelectMenu()) {
+
         } else if (interaction.isModalSubmit()) {
             try {
                 const form_handler = new FormHandler(interaction);
@@ -252,25 +250,33 @@ discord_client_instance.on(Events.InteractionCreate,
                 return;
             }
 
-            const command_role_authorizations: string[] = user_command.authorization_role_name;
+            const required_roles: string[] = user_command.authorization_role_name;
 
-            try {
-                if (determineIfUserCanUseCommand(interaction.member, command_role_authorizations)) {
-                    user_command.execute(interaction);
-                } else {
-                    const authorized_roles = createListOfRoles(command_role_authorizations)
+            if (required_roles.length > 0) {
+                if (!(determineIfUserCanUseCommand(interaction.member, required_roles))) {
+                    const authorized_roles: string = createListOfRoles(required_roles)
                     await interaction.reply({
                         content: `You must have one of the following roles to use this command: ${authorized_roles}`,
                         flags: MessageFlags.Ephemeral
-                    })
+                    });
                     return;
                 }
+            }
+
+            try {
+                await user_command.execute(interaction);
             } catch (error) {
                 if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+                    await interaction.followUp({
+                        content: `There was an error while executing this command. Please inform the bot developer: ${error}`,
+                        flags: MessageFlags.Ephemeral
+                    });
                     return;
                 } else {
-                    await interaction.followUp({content: `There was an error while executing this command. Please inform the bot developer: ${error}`, flags: MessageFlags.Ephemeral});
+                    await interaction.reply({
+                        content: `There was an error while executing this command. Please inform the bot developer: ${error}`,
+                        flags: MessageFlags.Ephemeral
+                    });
                     return;
                 }
             }
@@ -283,13 +289,24 @@ discord_client_instance.on(Events.GuildCreate,
      * @param guild
      */
     async (guild: Guild): Promise<void> => {
+        if (database_repository) {
+            await closeDatabaseConnection();
+        }
+        await createDatabaseConnection();
         try {
-            await createBotCategoryAndChannels(guild);
+            if (guild) {
+                //await createBotCategoryAndChannels(guild);
+            }
+            await loadSetupCommandsIntoCollection();
+            if (discord_bot_token) {
+                await registerSetupCommandsWithBot(discord_bot_token, discord_application_id, kush_faction_server_id);
+            }
         } catch (error) {
-            console.error(`There was an error when attempting to create a new category and channels within Discord`);
-            return;
+            throw error;
         }
 });
+
+discord_client_instance.login(discord_bot_token);
 
 /**
  * Creates a new category and several channels within that category for the bot to use
@@ -365,7 +382,7 @@ function determineIfUserCanUseCommand(client: any, client_authorization_role_arr
  */
 function createListOfRoles(roles: string[]): string {
     let roles_allowed_sentence: string = "";
-    for (let i = 0; i < roles.length - 1; i++) {
+    for (let i: number = 0; i < roles.length - 1; i++) {
         roles_allowed_sentence += roles[i];
         roles_allowed_sentence += ", ";
     }
@@ -376,7 +393,7 @@ function createListOfRoles(roles: string[]): string {
 /*******************************************************************/
 /*  Beginning of custom event emitter functions                    */
 /*******************************************************************/
-custom_event_emitter!!.on("updateBotChannelData",
+custom_event_emitter.on("updateBotChannelData",
     /**
      * When a bot administrator attempts to update the channel data associated with the bot, this event will trigger
      * @param channel the target Discord channel
@@ -395,7 +412,7 @@ custom_event_emitter!!.on("updateBotChannelData",
         }
     });
 
-custom_event_emitter!!.on("showFactionGoals",
+custom_event_emitter.on("showFactionGoals",
 
     async(channel_id: string): Promise<void> => {
         try {
@@ -442,7 +459,7 @@ custom_event_emitter!!.on("showFactionGoals",
         }
     });
 
-custom_event_emitter!!.on("showBotChannelData",
+custom_event_emitter.on("showBotChannelData",
 
     async(channel_id: string): Promise<void> => {
         try {

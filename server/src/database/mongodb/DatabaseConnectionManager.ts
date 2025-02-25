@@ -4,8 +4,6 @@ import {Collection, Db, MongoClient, ServerApiVersion} from "mongodb";
  * Manages the database connection pool that allows us to perform operations on a mongodb database
  */
 export default class DatabaseConnectionManager {
-    database_username: string | undefined;
-    database_password: string | undefined;
     database_connection_string: string | undefined;
     database_connection_maximum_pool_size: number | undefined;
     database_connection_minimum_pool_size: number | undefined;
@@ -15,28 +13,18 @@ export default class DatabaseConnectionManager {
 
     /**
      * Builds a mongodb object which can perform various operations on a mongodb database
-     * @param database_username username of a database administrator
-     * @param database_password password of a database administrator
      * @param database_connection_string connection string to the database
      * @param database_minimum_pool_size minimum pool size for database connections
      * @param database_maximum_pool_size maximum pool size for database connections
      * @param database_name name of a database in the mongodb cluster
      * @param database_instance an instance of the database that exists in mongodb
      */
-    constructor(database_username: string | undefined,
-                database_password: string | undefined,
-                database_connection_string: string | undefined,
+    constructor(database_connection_string: string | undefined,
                 database_minimum_pool_size: number | undefined,
                 database_maximum_pool_size: number | undefined,
                 database_name: string | undefined,
                 database_instance: Db | null) {
 
-        if (database_username) {
-            this.database_username = database_username;
-        }
-        if (database_password) {
-            this.database_password = database_password;
-        }
         if (database_connection_string) {
             this.database_connection_string = database_connection_string;
         }
@@ -51,11 +39,6 @@ export default class DatabaseConnectionManager {
         }
         if (database_instance) {
             this.database_instance = database_instance;
-        }
-        if (this.database_connection_string && this.database_username && this.database_password) {
-            this.database_connection_string = this.database_connection_string
-                .replace("${USERNAME}", encodeURIComponent(this.database_username))
-                .replace("${PASSWORD}", encodeURIComponent(this.database_password));
         }
     }
 

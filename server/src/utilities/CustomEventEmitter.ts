@@ -1,7 +1,6 @@
 import EventEmitter from "node:events";
 import IBotDataDocument from "../models/IBotDataDocument";
 import { Channel } from "discord.js";
-import {IFactionGoals} from "../models/IFactionGoals";
 
 export default class CustomEventEmitter extends EventEmitter {
     private static event_emitter_instance: CustomEventEmitter;
@@ -17,7 +16,7 @@ export default class CustomEventEmitter extends EventEmitter {
      * Implementation of singleton pattern so we do not run into any problems with multiple event emitters
      */
     public static getCustomEventEmitterInstance(): CustomEventEmitter {
-        if (this.event_emitter_instance) {
+        if (!(this.event_emitter_instance)) {
             this.event_emitter_instance = new CustomEventEmitter();
         }
         return this.event_emitter_instance;
