@@ -20,7 +20,7 @@ export default class CreateBotFarmingButton implements ICommand {
                 .setDescription(`(Required) Enter a new username for the bot`)
                 .setRequired(true)
         );
-    authorization_role_name: string[] = ["Bot administrator"];
+    authorization_role_name: string[] = [];
 
     /**
      * Replies to the user interaction /create-bot-role-button by sending a button that will grant administrative permissions to the bot

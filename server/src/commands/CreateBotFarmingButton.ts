@@ -32,9 +32,13 @@ export default class CreateBotFarmingButton implements ICommand {
                 watered_crops_button
             )
 
-        await interaction.reply({
-            content: `Shown below is a button which will inform everyone the last time crops were watered`,
-            components: [farming_button_row]
-        });
+        try {
+            await interaction.reply({
+                content: `Shown below is a button which will inform everyone the last time crops were watered`,
+                components: [farming_button_row]
+            });
+        } catch (error) {
+            throw error;
+        }
     }
 }
