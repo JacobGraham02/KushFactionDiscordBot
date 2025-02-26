@@ -66,8 +66,8 @@ export default class CreatePzfansMapLinks implements ICommand {
 async function createPzfansDropdownMenu(json_file_path: string): Promise<ActionRowBuilder<AnyComponentBuilder>> {
     try {
         const json_data: string = await fs.promises.readFile(`${json_file_path}`, "utf-8");
-        const mapDataObject = JSON.parse(json_data);
-        const option_menu_data = Object.values(mapDataObject);
+        const map_data_object = JSON.parse(json_data);
+        const option_menu_data = Object.values(map_data_object);
 
         const menu_options: StringSelectMenuOptionBuilder[] = option_menu_data.map(((map_item: any, index: number): StringSelectMenuOptionBuilder => {
             return new StringSelectMenuOptionBuilder()

@@ -188,8 +188,26 @@ export default class ButtonHandler extends InteractionHandler {
             case button_id === "farming_button": {
                 const current_unix_timestamp: number = Math.floor(Date.now() / 1000);
                 const timestamp_for_discord: string = `<t:${current_unix_timestamp}:F>`;
+
+                // Retrieve the original message that contains the farming time stamp
+                const message: Message<boolean> = this.button_interaction.message;
+
+                //  Use a regex pattern to find the previous 'last watered' entry, if it exists
+                const timestamp_regex = /Last watered: <t:\d+F>/;
+                let updated_content: string = message.content;
+
+                if (timestamp_regex.test(updated_content)) {
+                    updated_content = updated_content.replace(timestamp_regex, `Last watered: ${timestamp_for_discord}`);
+                } else {
+                    updated_content += `\nLast watered: ${timestamp_for_discord}`;
+                }
+
+                await message.edit({
+                   content: updated_content
+                });
+
                 await this.button_interaction.reply({
-                    content: `The crops were last watered on ${timestamp_for_discord}`,
+                    content: `Farming timestamp updated to ${timestamp_for_discord}`,
                     flags: MessageFlags.Ephemeral
                 });
                 break;

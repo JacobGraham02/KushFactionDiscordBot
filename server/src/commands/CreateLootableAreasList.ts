@@ -22,11 +22,13 @@ export default class CreateLootableAreasList implements ICommand {
 
     async execute(interaction: any): Promise<void> {
         try {
-            const json_file_path: string = `./data/PzfansMaps.json`;
-            const area_data: IPzFansMapItem[] = JSON.parse(fs.readFileSync(json_file_path, "utf-8"));
+            const json_file_path: string = `src/commands/data/PzfansMaps.json`;
+            const json_data: string = await fs.promises.readFile(json_file_path, "utf-8");
+            const lootable_areas_object = JSON.parse(json_data);
+            const lootable_areas_data = Object.values(lootable_areas_object) as PzFanMapData[];
 
             let lootable_areas_text: string = ``;
-            for (const area of area_data) {
+            for (const area of lootable_areas_data) {
                 lootable_areas_text += `**${area.label}**\n`;
                 lootable_areas_text += `${area.description}\n`;
                 lootable_areas_text += `Last looted: N/A\n`;
