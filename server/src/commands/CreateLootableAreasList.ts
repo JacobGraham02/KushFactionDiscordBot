@@ -28,23 +28,32 @@ export default class CreateLootableAreasList implements ICommand {
             const lootable_areas_data = Object.values(lootable_areas_object) as PzFanMapData[];
 
             let lootable_areas_text: string = ``;
-            for (const area of lootable_areas_data) {
-                lootable_areas_text += `**${area.label}**\n`;
-                lootable_areas_text += `${area.description}\n`;
-                lootable_areas_text += `Last looted: N/A\n`;
-                lootable_areas_text += `[${area.label} map url (pzfans.com):] ${area.url}\n\n`;
+            const buttons: ButtonBuilder[] = [];
+            const button_row: ActionRowBuilder<AnyComponentBuilder>[] = [];
 
+            // Loop through each map data object and send an individual message
+            for (const area of lootable_areas_data) {
+                let area_text: string = "";
+                area_text += `**${area.label}**\n`;
+                area_text += `${area.description}\n`;
+                area_text += `Last looted: N/A\n`;
+                area_text += `[${area.label} map url (pzfans.com):] ${area.url}\n\n`;
+
+                // Create a single button for marking this area as looted
                 const mark_looted_button: ButtonBuilder = new ButtonBuilder()
                     .setCustomId(`mark_looted_${area.id}`)
                     .setLabel("Mark as looted")
-                    .setStyle(ButtonStyle.Primary)
+                    .setStyle(ButtonStyle.Primary);
 
+                // Create an action row containing the button
                 const action_row: ActionRowBuilder<AnyComponentBuilder> = new ActionRowBuilder()
-                    .addComponents(mark_looted_button)
+                    .addComponents(mark_looted_button);
 
+                // Send an individual message for the current map
                 await interaction.channel.send({
-                    content: lootable_areas_text,
-                    components: [action_row]
+                    content: area_text,
+                    components: [action_row],
+                    flags: MessageFlags.Ephemeral
                 });
             }
         } catch (error) {
