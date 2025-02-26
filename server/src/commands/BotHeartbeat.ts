@@ -9,7 +9,7 @@ export default class CheckBotHeartbeat implements ICommand {
         .setName(`check-heartbeat`)
         .setDescription(`Check if the bot is active`)
 
-    authorization_role_name: string[] = [""]
+    authorization_role_name: string[] = []
 
     /**
      * Replies to the user interaction /create-bot-role-button by sending a button that will grant administrative permissions to the bot
