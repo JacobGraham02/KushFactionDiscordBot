@@ -23,9 +23,39 @@ export default class FormHandler extends InteractionHandler {
         const form_id: string = this.form_interaction.customId;
 
         switch (true) {
+            case form_id.startsWith("create_faction_goal_"): {
+                const goal_name: string = this.form_interaction.fields.getTextInputValue("faction_goal_name");
+                const goal_description: string = this.form_interaction.fields.getTextInputValue("faction_goal_description");
+                const goal_status: string = this.form_interaction.fields.getTextInputValue("faction_goal_status");
+
+                const faction_goal_data: IFactionGoals = {
+                    faction_id: faction_id,
+                    goal_name: goal_name,
+                    description: goal_description,
+                    status: goal_status
+                }
+
+                try {
+                    const database_result: UpdateResult<any> = await database_repository.createOrUpdateFactionGoals(faction_id, faction_goal_data);
+                    if (!database_result) {
+                        await this.form_interaction.reply({
+                            content: `Could not create **${goal_name}. Please try again or contact the bot developer`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
+                } catch (error) {
+                    throw error;
+                }
+
+                await this.form_interaction.reply({
+                    content: `Goal **${goal_name}** created successfully.`,
+                    flags: MessageFlags.Ephemeral
+                });
+
+                break;
+            }
             case form_id.startsWith("update_goal_modal_"): {
                 const goal_name: string = form_id.replace("update_goal_modal_", "");
-
                 const description: string = this.form_interaction.fields.getTextInputValue("goal_description");
                 const status: string = this.form_interaction.fields.getTextInputValue("goal_status");
                 const data: IFactionGoals = {

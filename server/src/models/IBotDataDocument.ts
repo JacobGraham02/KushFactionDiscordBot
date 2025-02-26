@@ -1,5 +1,5 @@
 import {Collection} from "mongodb";
-import {Collections} from "../enums/Collections";
+import {ECollections} from "../enums/ECollections";
 import {IFactionGoals} from "./IFactionGoals";
 
 /**

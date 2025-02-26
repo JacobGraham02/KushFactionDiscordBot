@@ -1,10 +1,10 @@
 import {DatabaseRepository} from "../../repository/DatabaseRepository";
-import {Collection, Db, DeleteResult, FindCursor, UpdateResult} from "mongodb";
+import {Collection, Db, DeleteResult, UpdateResult} from "mongodb";
 import IBotDataDocument from "../../../models/IBotDataDocument";
 import {IFactionGoals} from "../../../models/IFactionGoals";
 import IFactionResources from "../../../models/IFactionResources";
 import IFactionTraitBuild from "../../../models/IFactionTraitBuild";
-import {Collections} from "../../../enums/Collections";
+import {ECollections} from "../../../enums/ECollections";
 
 /**
  * Created a base CRUD class that is used to interact with a specific mongodb collection
@@ -18,7 +18,7 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @param database_instance instance of mongodb database connection
      * @param collection_name name of mongodb database collection
      */
-    constructor(private database_instance: Db, private collection_name: Collections) {
+    constructor(private database_instance: Db, private collection_name: ECollections) {
         super();
         this.collection = this.getCollection(collection_name);
     }
@@ -32,22 +32,14 @@ export class BotDataRepository extends DatabaseRepository<any> {
     }
 
     /**
-     * Added functionality to change the collection name that we are querying. Because NoSQL do not have things like foreign keys
-     * and other relationships that SQL has, we have to compensate using this
-     * @param collection_name the name of our target collection
-     */
-    changeCollection(collection_name: string) {
-        this.collection = this.getCollection(collection_name);
-    }
-
-    /**
      * Returns a Document that conforms to the structure defined in the interface IBotDataDocument, or null if no document is found
      * @param id the Discord guild id
      * @returns IBotDataDocument or null depending on if bot data is present
      */
     async findById(id: string): Promise<IBotDataDocument | null> {
+        const collection: Collection<any> = this.getCollection(ECollections.BOT_DATA);
         try {
-            const bot_data_collection: IBotDataDocument | null = await this.collection.findOne({ discord_guild_id: id});
+            const bot_data_collection: IBotDataDocument | null = await collection.findOne({ discord_guild_id: id});
 
             if (!bot_data_collection) {
                 throw new Error(`The bot data document is null`);
@@ -72,8 +64,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @returns Promise<UpdateResult<any>> The update result object
      */
     async create(data: IBotDataDocument): Promise<UpdateResult<any>> {
+        const collection: Collection<any> = this.getCollection(ECollections.BOT_DATA);
         try {
-            const create_data_result: UpdateResult<any> = await this.collection.updateOne(
+            const create_data_result: UpdateResult<any> = await collection.updateOne(
                 {discord_guild_id: data.discord_guild_id},
                 {$set: data},
                 {upsert: true}
@@ -90,8 +83,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @returns The modified bot data document if found, otherwise null
      */
     async update(data: IBotDataDocument): Promise<UpdateResult<any> | null> {
+        const collection: Collection<any> = this.getCollection(ECollections.BOT_DATA);
         try {
-            const update_data_result: UpdateResult<any> = await this.collection.updateOne(
+            const update_data_result: UpdateResult<any> = await collection.updateOne(
                 {discord_guild_id: data.discord_guild_id},
                 {$set: data},
                 {upsert: true}
@@ -108,8 +102,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @returns If the bot data was deleted successfully
      */
     async delete(id: string): Promise<boolean> {
+        const collection: Collection<any> = this.getCollection(ECollections.BOT_DATA);
         try {
-            const deletion_result: DeleteResult = await this.collection.deleteOne({ discord_guild_id: id });
+            const deletion_result: DeleteResult = await collection.deleteOne({ discord_guild_id: id });
             return deletion_result.deletedCount >= 1;
         } catch (error) {
             throw error;
@@ -123,8 +118,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @return The update result from the update operation
      */
     async createOrUpdateFactionGoals(id: string, data: IFactionGoals): Promise<UpdateResult<any>> {
+        const collection: Collection<any> = this.getCollection(ECollections.FACTION_GOALS);
         try {
-            const create_or_update_faction_goals_result = await this.collection.updateOne(
+            const create_or_update_faction_goals_result: UpdateResult<any> = await collection.updateOne(
                 {faction_goals_id: id},
                 {$set: data},
                 {upsert: true}
@@ -141,10 +137,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @return IFactionGoals formatted object if data could be found, null otherwise
      */
     async getFactionGoals(id: string): Promise<IFactionGoals[] | null> {
+        const collection: Collection<any> = this.getCollection(ECollections.FACTION_GOALS);
         try {
-            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_GOALS);
-
-            const faction_goals  = await this.collection.find({ faction_id: id }).toArray();
+            const faction_goals  = await collection.find({ faction_id: id }).toArray();
 
             if (faction_goals.length <= 0) {
                 return null;
@@ -167,9 +162,8 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @returns `true` if the goal was successfully deleted, `false` otherwise
      */
     async deleteFactionGoal(goal_name: string): Promise<boolean> {
+        const collection: Collection<any> = this.getCollection(ECollections.FACTION_GOALS);
         try {
-            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_GOALS);
-
             const delete_result: DeleteResult = await collection.deleteOne({ goal_name });
 
             if (delete_result.deletedCount === 0) {
@@ -188,10 +182,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @return IFactionGoals formatted object if data could be found, null otherwise
      */
     async getFactionGoal(name: string): Promise<IFactionGoals | null> {
+        const collection: Collection<any> = this.getCollection(ECollections.FACTION_GOALS);
         try {
-            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_GOALS);
-
-            const faction_goal  = await this.collection.findOne({ goal_name: name });
+            const faction_goal  = await collection.findOne({ goal_name: name });
 
             if (!faction_goal) {
                 return null;
@@ -216,8 +209,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @return The update result from the update operation
      */
     async createOrUpdateFactionResources(id: string, data: IFactionResources): Promise<UpdateResult<any>> {
+        const collection: Collection<any> = this.getCollection(ECollections.FACTION_RESOURCES);
         try {
-            const create_or_update_faction_resources_result: UpdateResult<any> = await this.collection.updateOne(
+            const create_or_update_faction_resources_result: UpdateResult<any> = await collection.updateOne(
                 {faction_resources_id: id},
                 {$set: { resources: data.resources }},
                 {upsert: true}
@@ -233,9 +227,9 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @param id The id of the faction to get resources for
      */
     async getFactionResources(id: string): Promise<IFactionResources[] | null> {
+        const collection: Collection<any> = this.getCollection(ECollections.FACTION_RESOURCES);
         try {
-            const collection: Collection<Document> = this.database_instance.collection(Collections.FACTION_RESOURCES);
-            const faction_resources = await this.collection.find({ faction_id: id }).toArray()
+            const faction_resources = await collection.find({ faction_id: id }).toArray()
 
             if (!faction_resources) {
                 return null;
@@ -257,8 +251,12 @@ export class BotDataRepository extends DatabaseRepository<any> {
      * @return The update result from the upsert operation
      */
     async createOrUpdateFactionBuild(id: string, data: IFactionTraitBuild): Promise<UpdateResult<any>> {
+        const collection: Collection<any> = this.getCollection(ECollections.FACTION_BUILDS);
         try {
-            const create_or_update_faction_build_result: UpdateResult<any> = await this.collection.updateOne(
+            if (this.collection_name !== ECollections.FACTION_BUILDS) {
+                this.collection = this.getCollection(ECollections.FACTION_BUILDS);
+            }
+            const create_or_update_faction_build_result: UpdateResult<any> = await collection.updateOne(
                 {discord_user_id: id},
                 {$set: data},
                 {upsert: true}

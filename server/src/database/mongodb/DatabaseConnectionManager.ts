@@ -85,7 +85,7 @@ export default class DatabaseConnectionManager {
     }
 
     /**
-     * Collections are received synchronously from an established connection to mongodb, so they function does not have to be async.
+     * ECollections are received synchronously from an established connection to mongodb, so they function does not have to be async.
      * the .collection() function from mongodb returns Collection<any>, so that is also the return type of this function
      * The expected return value of this function is Collection<Document>
      * @return a Collection of Document objects

@@ -43,7 +43,7 @@ import {ICommand} from "./interfaces/ICommand";
 import {BotDataRepository} from "./database/mongodb/repository/BotDataRepository";
 import IBotDataDocument from "./models/IBotDataDocument";
 import {UpdateResult} from "mongodb";
-import {Collections} from "./enums/Collections";
+import {ECollections} from "./enums/ECollections";
 import {IFactionGoals} from "./models/IFactionGoals";
 import SelectMenuHandler from "./event_handlers/select_menu_handler/SelectMenuHandler";
 
@@ -161,7 +161,7 @@ async function createDatabaseConnection(): Promise<void> {
 
     database_repository = new BotDataRepository(
         database_connection_manager.database_instance,
-        Collections.BOT_DATA
+        ECollections.BOT_DATA
     );
 }
 
