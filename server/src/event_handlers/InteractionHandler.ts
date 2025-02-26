@@ -1,4 +1,5 @@
 import {Interaction} from "discord.js";
+import {BotDataRepository} from "../database/mongodb/repository/BotDataRepository";
 
 /**
  * Abstract class which enables polymorphism between different handler classes, as each type of interaction in Discord
@@ -11,5 +12,5 @@ export default abstract class InteractionHandler {
      */
     constructor(protected interaction: Interaction) {}
 
-    abstract handle(): Promise<void>;
+    abstract handle(database_repository?: BotDataRepository, faction_id?: string): Promise<void>;
 }

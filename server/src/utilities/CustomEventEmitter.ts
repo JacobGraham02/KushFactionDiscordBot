@@ -16,7 +16,7 @@ export default class CustomEventEmitter extends EventEmitter {
      * Implementation of singleton pattern so we do not run into any problems with multiple event emitters
      */
     public static getCustomEventEmitterInstance(): CustomEventEmitter {
-        if (this.event_emitter_instance) {
+        if (!(this.event_emitter_instance)) {
             this.event_emitter_instance = new CustomEventEmitter();
         }
         return this.event_emitter_instance;
@@ -30,6 +30,30 @@ export default class CustomEventEmitter extends EventEmitter {
     public emitUpdateBotChannelDataEvent(channel: Channel, bot_channel_data: IBotDataDocument): void {
         try {
             this.emit(`updateBotChannelData`, channel, bot_channel_data);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Emits an event that will trigger the application to show all of the registered faction goals in embedded messages
+     * @param channel_id the target Discord channel id at which to send the faction goals
+     */
+    public emitShowFactionGoalsEvent(channel_id: string): void {
+        try {
+            this.emit('showFactionGoals', channel_id);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Emits an event that will trigger the application to show all channel data registered with the bot
+     * @param channel_id the target Discord channel id at which to send the data
+     */
+    public emitShowBotChannelDataEvent(channel_id: string): void {
+        try {
+            this.emit('showBotChannelData', channel_id);
         } catch (error) {
             throw error;
         }

@@ -5,7 +5,7 @@ import {
     ActionRowBuilder,
     AnyComponentBuilder,
     StringSelectMenuBuilder,
-    StringSelectMenuOptionBuilder,
+    StringSelectMenuOptionBuilder, MessageFlags, StringSelectMenuInteraction,
 } from "discord.js";
 import * as fs from "node:fs";
 import {ICommand} from "../interfaces/ICommand";
@@ -15,30 +15,45 @@ import {ICommand} from "../interfaces/ICommand";
  */
 export default class CreatePzfansMapLinks implements ICommand {
     data: SlashCommandBuilder = new SlashCommandBuilder()
-        .setName('PZfans')
+        .setName('pzfans-map-links')
         .setDescription(`Get a list of all PZfans map links for APA`);
 
-    authorization_role_name: string[] = [""];
+    authorization_role_name: string[] = [];
 
     /**
      * Replies to the user interaction /PZfans by sending a dropdown list of PZ fans map links
      * @param interaction how the user interacted with the bot through Discord
      */
     async execute(interaction: any): Promise<void> {
-        try {
-            const json_file_path: string = `./data/PzfansMaps.json`;
-            const actionRow: ActionRowBuilder<AnyComponentBuilder> = await createPzfansDropdownMenu(json_file_path);
+        await interaction.deferReply({
+            flags: MessageFlags.Ephemeral
+        });
 
-            await interaction.reply({
+        const json_file_path: string = `src/commands/data/PzfansMaps.json`;
+        let actionRow: ActionRowBuilder<AnyComponentBuilder>;
+
+        try {
+            actionRow = await createPzfansDropdownMenu(json_file_path);
+            await interaction.editReply({
                 content: `Please select a map:`,
                 components: [actionRow],
-                ephemeral: true,
-            })
+                flags: MessageFlags.Ephemeral,
+            });
         } catch (error) {
-            await interaction.reply({
+            if (interaction.replied || interaction.deferred) {
+                try {
+                    await interaction.followUp({
+                        content: `There was an error when attempting to show the drop down list: ${error}`,
+                        flags: MessageFlags.Ephemeral
+                    });
+                } catch (followUpError) {
+                    console.error(`Failed to send drop down menu follow up message: ${followUpError}`)
+                }
+            }
+            await interaction.editReply({
                 content: `There was an error when attempting to load the map selector menu: ${error}`,
-                ephemeral: true,
-            })
+                flags: MessageFlags.Ephemeral
+            });
         }
     }
 }
@@ -50,17 +65,18 @@ export default class CreatePzfansMapLinks implements ICommand {
  */
 async function createPzfansDropdownMenu(json_file_path: string): Promise<ActionRowBuilder<AnyComponentBuilder>> {
     try {
-        const json_data: string = fs.readFileSync(`${json_file_path}`, "utf-8");
-        const option_menu_data: IPzFansMapItem[] = JSON.parse(json_data);
+        const json_data: string = await fs.promises.readFile(`${json_file_path}`, "utf-8");
+        const map_data_object = JSON.parse(json_data);
+        const option_menu_data = Object.values(map_data_object);
 
-        const menu_options: StringSelectMenuOptionBuilder[] = option_menu_data.map(map_item => {
+        const menu_options: StringSelectMenuOptionBuilder[] = option_menu_data.map(((map_item: any, index: number): StringSelectMenuOptionBuilder => {
             return new StringSelectMenuOptionBuilder()
                 .setLabel(map_item.label)
                 .setDescription(map_item.description)
-                .setValue(map_item.url);
-        });
+                .setValue(index.toString());
+        }));
 
-        const select_pzfans_map = new StringSelectMenuBuilder()
+        const select_pzfans_map: StringSelectMenuBuilder = new StringSelectMenuBuilder()
             .setCustomId("PZfans_map_selector_menu")
             .setPlaceholder("Select a map")
             .addOptions(
@@ -71,7 +87,7 @@ async function createPzfansDropdownMenu(json_file_path: string): Promise<ActionR
 
         return actionRow;
     } catch (error) {
-        throw error;
+        throw new Error(`Failed to load PZ fans map data: ${error}`);
     }
 }
 

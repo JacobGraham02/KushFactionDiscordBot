@@ -9,7 +9,7 @@ export default class CreateBotRoleButton implements ICommand {
         .setName(`create-bot-role-button`)
         .setDescription(`Adds 1 button which grants administrative permissions to the bot`);
 
-    authorization_role_name: string[] = [""];
+    authorization_role_name: string[] = [];
 
     /**
      * Replies to the user interaction /create-bot-role-button by creating a button that will grant administrative permissions to the bot
@@ -24,9 +24,13 @@ export default class CreateBotRoleButton implements ICommand {
         const admin_button_row: ActionRowBuilder<AnyComponentBuilder> = new ActionRowBuilder()
             .addComponents(become_admin_button)
 
-        await interaction.reply({
-            content: `Shown below is a button which will grant you administrative permissions with the bot when clicked. This will give you extra permissions with the bot if clicked, and will assign you a new role`,
-            components: [admin_button_row]
-        });
+        try {
+            await interaction.reply({
+                content: `Shown below is a button which will grant you administrative permissions with the bot when clicked. This will give you extra permissions with the bot if clicked, and will assign you a new role`,
+                components: [admin_button_row]
+            });
+        } catch (error) {
+            throw error;
+        }
     }
 }
