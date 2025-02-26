@@ -85,7 +85,7 @@ export default class FormHandler extends InteractionHandler {
                 break;
             }
             case form_id.startsWith("update_bot_data_modal_"): {
-                const faction_id: string = form_id.replace("confirm_delete_goal_", "");
+                const faction_id: string = form_id.replace("update_bot_data_modal_", "");
                 const faction_goals_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_goals_channel_id");
                 const faction_resource_storage_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_resource_storage_channel_id");
                 const faction_pzfans_maps_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_pzfans_maps_channel_id");
@@ -93,6 +93,7 @@ export default class FormHandler extends InteractionHandler {
                 const faction_areas_looted_channel_id: string = this.form_interaction.fields.getTextInputValue("faction_areas_looted_channel_id");
 
                 const data: IBotDataDocument = {
+                    discord_guild_id: faction_id,
                     discord_faction_goals_channel_id: faction_goals_channel_id,
                     discord_resource_storage_channel_id: faction_resource_storage_channel_id,
                     discord_pzfans_maps_channel_id: faction_pzfans_maps_channel_id,
@@ -107,15 +108,15 @@ export default class FormHandler extends InteractionHandler {
                             content: `Could not update bot data for guild **${faction_id}**. Please try again or contact the bot administrator`,
                             flags: MessageFlags.Ephemeral
                         });
+                        return;
                     }
+                    await this.form_interaction.reply({
+                        content: `Bot data for guild **${faction_id}** updated successfully`,
+                        flags: MessageFlags.Ephemeral
+                    });
                 } catch (error) {
                     throw error;
                 }
-
-                await this.form_interaction.reply({
-                    content: `Bot data for guild **${faction_id}** updated successfully`,
-                    flags: MessageFlags.Ephemeral
-                });
 
                 break;
             }

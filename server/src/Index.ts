@@ -307,7 +307,7 @@ discord_client_instance.on(Events.GuildCreate,
         await createDatabaseConnection();
         try {
             if (guild) {
-                //await createBotCategoryAndChannels(guild);
+                // await createBotCategoryAndChannels(guild);
             }
             await loadSetupCommandsIntoCollection();
             if (discord_bot_token) {
@@ -480,43 +480,37 @@ custom_event_emitter.on("showBotChannelData",
             if (!channel) {
                 throw new Error(`The channel in which to send the bot data is undefined`);
             }
+            if (!show_bot_channel_data) {
+                throw new Error(`The bot data document is undefined or not registered with the bot`);
+            }
             if (show_bot_channel_data && channel.isSendable()) {
-                for (const {
-                    discord_guild_id,
-                    discord_faction_goals_channel_id,
-                    discord_resource_storage_channel_id,
-                    discord_pzfans_maps_channel_id,
-                    discord_farming_channel_id,
-                    discord_areas_looted_channel_id} of Object.values(show_bot_channel_data)) {
+                const embedded_message_builder: EmbedBuilder = new EmbedBuilder()
+                    .setTitle("Bot channel data")
+                    .setColor(0x00AE86)
+                    .setDescription("Bot data")
+                    .addFields(
+                        {name: "Guild id:", value: `${show_bot_channel_data.discord_guild_id}`},
+                        {name: "Goals channel id:", value: `${show_bot_channel_data.discord_faction_goals_channel_id}`},
+                        {name: "Resources channel id:", value: `${show_bot_channel_data.discord_resource_storage_channel_id}`},
+                        {name: "Pzfans maps channel id:", value: `${show_bot_channel_data.discord_pzfans_maps_channel_id}`},
+                        {name: "Farming channel id:", value: `${show_bot_channel_data.discord_farming_channel_id}`},
+                        {name: "Areas looted channel id:", value: `${show_bot_channel_data.discord_areas_looted_channel_id}`})
+                    .setThumbnail("https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0")
+                    .setTimestamp()
+                    .setFooter({
+                        text: 'Kush faction Discord bot',
+                        iconURL: "https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0"
+                    });
 
-                    const embedded_message_builder: EmbedBuilder = new EmbedBuilder()
-                        .setTitle("Bot channel data")
-                        .setColor(0x00AE86)
-                        .setDescription("Bot data")
-                        .addFields(
-                            {name: "Guild id:", value: discord_guild_id},
-                            {name: "Goals channel id:", value: discord_faction_goals_channel_id},
-                            {name: "Resources channel id:", value: discord_resource_storage_channel_id},
-                            {name: "Pzfans maps channel id:", value: discord_pzfans_maps_channel_id},
-                            {name: "Farming channel id:", value: discord_farming_channel_id},
-                            {name: "Areas looted channel id:", value: discord_areas_looted_channel_id})
-                        .setThumbnail("https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0")
-                        .setTimestamp()
-                        .setFooter({
-                            text: 'Kush faction Discord bot',
-                            iconURL: "https://www.dropbox.com/scl/fi/e1q046ct1haaes6lrdb70/DiscordBotImage.png?rlkey=wgmkewc9q030rkucow71ljepo&st=gtcghwx0&dl=0"
-                        });
+                const update_button: ButtonBuilder = new ButtonBuilder()
+                    .setCustomId(`update_bot_data_${show_bot_channel_data.discord_guild_id}`)
+                    .setLabel("Update Bot Data")
+                    .setStyle(ButtonStyle.Primary)
 
-                    const update_button: ButtonBuilder = new ButtonBuilder()
-                        .setCustomId(`update_bot_data_${discord_guild_id}`)
-                        .setLabel("Update Bot Data")
-                        .setStyle(ButtonStyle.Primary)
+                const button_action_row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(update_button);
 
-                    const button_action_row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>()
-                        .addComponents(update_button, update_button);
-
-                    channel.send({embeds: [embedded_message_builder], components: [button_action_row]});
-                }
+                channel.send({embeds: [embedded_message_builder], components: [button_action_row]});
             }
         } catch (error) {
             throw error;
